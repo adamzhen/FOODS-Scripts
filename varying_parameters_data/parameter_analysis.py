@@ -17,7 +17,7 @@ if method == 1:
     for i in range(0, len(data), 2):
         p1 = data[i]
         p2 = data[i+1]
-        score = (p2[-1]-p1[-1]) / (p2[1]-p1[1])
+        score = (p2[-1]-p1[-1]) #/ (p2[1]-p1[1])
         paramdict[p1[0]] = score
         #print(f"{p1[0]}: {score:.4f}")
     paramdict = dict(sorted(paramdict.items(), key=lambda x:x[1]))
