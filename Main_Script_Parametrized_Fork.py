@@ -158,17 +158,17 @@ print varParameters
 # Open data file and write column headings
 DataFile = open('PostData.txt','w')
 #DataFile.write('%s\n\n' % (', '.join(paramNames)))
-DataFile.write('Model #, Name, Value (cm), Max Mises Stress (Pa), Max Displacement (cm), V (cm^3), SA (cm^2), SA:V (1/cm)\n')
+DataFile.write('Model, Load, Name, Value (cm), Max Mises Stress (Pa), Max Displacement (cm), V (cm^3), SA (cm^2), SA:V (1/cm)\n')
 DataFile.close()
 
 Mdb()
 
-for vari in range(len(varParameters)): #len(varParameters)
+for vari in range(1): #len(varParameters)
 	param = varParameters[vari]
-	for j in range(0, 3, 2):
+	for j in range(1):
 		vars = meanParameters[:]
-		vars[vari] = param[j]
-		loadn = 2
+		#vars[vari] = param[j]
+		loadn = 1
 		print modelNum
 		print vars
 		print("Load Case %1.0f" % (loadn))
@@ -703,23 +703,11 @@ for vari in range(len(varParameters)): #len(varParameters)
 				initialInc=0.1)
 			session.viewports['Viewport: 1'].assemblyDisplay.setValues(step=stepName)
 			
-			# Field Output Request for Model
-			#Define Sets
-			print 'Defining Sets'
-
-			# Note: Create "TIPNODE" here
-			# Create it from the Assembly Module (not Part)
-			a = mdb.models[ModelName].rootAssembly
-			n1 = a.instances['Fork-m-1'].nodes
-			nodes1 = n1[2:3]
-			a.Set(nodes=nodes1, name='TIPNODE')
-			#: The set 'TIPNODE' has been created (1 node).
-			
 			#Define Loads
 			print 'Defining Loads'
 
 			# Load-1 (Vertical)
-			F1 = 50 # Newtons
+			F1 = 50.0 # Newtons
 			Asurf1 = (L3 * (W3+W4) / 2) / (100**2) # Area of Surf-1 converted from cm^2 to m^2
 			a = mdb.models[ModelName].rootAssembly
 			s1 = a.instances['Fork-m-1'].faces
@@ -782,6 +770,55 @@ for vari in range(len(varParameters)): #len(varParameters)
 				region=region, u1=0.0, u2=UNSET, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET, 
 				amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='', 
 				localCsys=None)
+
+			# Field Output Request for Model
+			#Define Sets
+			print 'Defining Sets'
+			
+			# Create reference points
+			a = mdb.models[ModelName].rootAssembly
+			e1 = a.instances['Fork-m-1'].edges
+			a.ReferencePoint(point=a.instances['Fork-m-1'].InterestingPoint(edge=e1.findAt(
+				coordinates=((Ws+Wt2)/2/100, (L3+L2)/100, (h4+T)/100)), rule=MIDDLE))
+			a = mdb.models[ModelName].rootAssembly
+			v1 = a.instances['Fork-m-1'].vertices
+			a.ReferencePoint(point=v1.findAt(coordinates=(0.0, 0.0, 0.0)))
+			a = mdb.models[ModelName].rootAssembly
+			# n1 = a.instances['Fork-m-1'].nodes
+			# delta = 1.0e2
+			# xmin, ymin, zmin = (Ws+Wt2)/2/100-delta, (L3+L2)/100-delta, (h4+T)/100-delta
+			# xmax, ymax, zmax = (Ws+Wt2)/2/100+delta, (L3+L2)/100+delta, (h4+T)/100+delta
+			# nodes1 = n1.getByBoundingBox((xmin, ymin, zmin, xmax, ymax, zmax))
+			# print('%s, %s, %s, %s, %s, %s' % (xmin, ymin, zmin, xmax, ymax, zmax))
+			
+			# Create reference sets
+			r1 = a.referencePoints
+			refPoints1=(r1[39], )
+			a.Set(referencePoints=refPoints1, name='REFSET-1-1')
+			r1 = a.referencePoints
+			refPoints1=(r1[40], )
+			a.Set(referencePoints=refPoints1, name='REFSET-1-2')
+			
+			# Create Field Outputs
+			# regionDef=mdb.models[ModelName].rootAssembly.sets['REFSET-1-1']
+			# mdb.models[ModelName].FieldOutputRequest(name='F-Output-1-1', 
+				# createStepName=stepName, variables=('S', 'MISES', 'MISESMAX', 'TSHR', 
+				# 'CTSHR', 'ALPHA', 'TRIAX', 'VS', 'PS', 'CS11', 'ALPHAN', 'SSAVG', 
+				# 'MISESONLY', 'PRESSONLY', 'SEQUT', 'YIELDPOT', 'E', 'VE', 'PE', 'VEEQ', 
+				# 'PEEQ', 'PEEQT', 'PEEQMAX', 'PEMAG', 'PEQC', 'EE', 'IE', 'THE', 'NE', 'LE', 
+				# 'TE', 'TEEQ', 'TEVOL', 'EEQUT', 'ER', 'SE', 'SPE', 'SEPE', 'SEE', 'SEP', 
+				# 'SALPHA', 'U', 'UT', 'UR', 'V', 'VT', 'VR', 'RBANG', 'RBROT'), 
+				# region=regionDef, sectionPoints=DEFAULT, rebar=EXCLUDE)
+			# regionDef=mdb.models['Model-1'].rootAssembly.sets['REFSET-1-2']
+			# mdb.models['Model-1'].FieldOutputRequest(name='F-Output-1-2', 
+				# createStepName='Load-1', variables=('S', 'MISES', 'MISESMAX', 'TSHR', 
+				# 'CTSHR', 'ALPHA', 'TRIAX', 'VS', 'PS', 'CS11', 'ALPHAN', 'SSAVG', 
+				# 'MISESONLY', 'PRESSONLY', 'SEQUT', 'YIELDPOT', 'E', 'VE', 'PE', 'VEEQ', 
+				# 'PEEQ', 'PEEQT', 'PEEQMAX', 'PEMAG', 'PEQC', 'EE', 'IE', 'THE', 'NE', 'LE', 
+				# 'TE', 'TEEQ', 'TEVOL', 'EEQUT', 'ER', 'SE', 'SPE', 'SEPE', 'SEE', 'SEP', 
+				# 'SALPHA', 'U', 'UT', 'UR', 'V', 'VT', 'VR', 'RBANG', 'RBROT'), 
+				# region=regionDef, sectionPoints=DEFAULT, rebar=EXCLUDE)
+
 				
 		if loadn==2:
 			#Define Steps
@@ -806,7 +843,7 @@ for vari in range(len(varParameters)): #len(varParameters)
 			side1Faces1 = s1.findAt((((Ws+Wt2)/2/100, (L3+l5)/100, (h5)/100), ))
 			region = a.Surface(side1Faces=side1Faces1, name='Surf-2')
 			# calculating area and pressure
-			F2 = 50 # Newtons
+			F2 = 3.0 # Newtons
 			surf2Face = s1.findAt(((Ws+Wt2)/2/100, (L3+l5)/100, (h5)/100))
 			Asurf2 = surf2Face.getSize()
 			mdb.models[ModelName].SurfaceTraction(name=loadName, createStepName=stepName, 
@@ -906,12 +943,12 @@ for vari in range(len(varParameters)): #len(varParameters)
 		print 'Pulling data from ODB'
 
 		var1,var2,var3 = 0,0,0 
-		S, U = getResults(ModelName)
+		S, U = getResults(ModelName, stepName)
 
 		#Calculations (if needed)
 
 		DataFile = open('PostData.txt','a')
-		DataFile.write('%1.0f, %s, %1.3f, %1.0f, %1.4f, %1.3f, %1.3f, %1.5f\n' % (modelNum, paramNames[vari], param[j], S, U*100, V, SA, SA/V)) 
+		DataFile.write('%1.0f, %1.0f, %s, %1.3f, %1.0f, %1.4f, %1.3f, %1.3f, %1.5f\n' % (modelNum, loadn, paramNames[vari], param[j], S, U*100, V, SA, SA/V)) 
 		DataFile.close()
 		
 		modelNum += 1

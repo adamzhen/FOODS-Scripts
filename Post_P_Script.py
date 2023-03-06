@@ -8,7 +8,7 @@ import visualization
 from viewerModules import *
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def getResults(ModelName):
+def getResults(ModelName, stepName):
 
 	"""
 	This ODB reading script does the following:
@@ -21,27 +21,27 @@ def getResults(ModelName):
 	odbName = ModelName+'.odb'
 	print odbName
 	odb = visualization.openOdb(odbName)
-	lastFrame = odb.steps['Load-1'].frames[-1]
+	lastFrame = odb.steps[stepName].frames[-1]
 	print 'odb open'
 
 
-	# # Selecting the node(s) to be queried
-	# # pTip = odb.rootAssembly.nodeSets['TIPNODE']
-		
-	# # # Retrieve Y-displacements at the splines/connectors
-	# # print 'Retrieving ALL final displacements at ALL points'
-	# # dispField = lastFrame.fieldOutputs['U']
+	# Selecting the node(s) to be queried
+	pTip = odb.rootAssembly.nodeSets.keys()
+	print pTip
+	print odb.rootAssembly.elementSets.keys()
+	# # Retrieve Y-displacements at the splines/connectors
+	# print 'Retrieving ALL final displacements at ALL points'
+	# dispField = lastFrame.fieldOutputs['U']
 
-	# # print 'Retrieving ALL displacements at TIPNODE'
-	# # dFieldpTip = dispField.getSubset(region=pTip)
+	# print 'Retrieving ALL displacements at TIPNODE'
+	# dFieldpTip = dispField.getSubset(region=pTip)
 
-	# # print 'Retrieving only U2 at TIPNODE'
-	# # #Note, U1=data[0], U2=data[1], U3=data[2]
-	# # disppTip = dFieldpTip.values[0].data[1]
+	# print 'Retrieving only U2 at TIPNODE'
+	# #Note, U1=data[0], U2=data[1], U3=data[2]
+	# disppTip = dFieldpTip.values[0].data[1]
 
 
 	## The following is left for use in later probems/projects
-	print 'Scanning the PART for maximum VM STRESS'
 	elsetName=' ALL ELEMENTS'
 	elset = elemset = None
 	region = "over the entire model"
@@ -85,6 +85,7 @@ def getResults(ModelName):
 			allFields = frame.fieldOutputs
 			print(allFields.keys())
 			if (allFields.has_key(Stress)):
+				print 'Scanning for maximum VM STRESS'
 				isStressPresent = 1
 				stressSet = allFields[Stress]  
 				misesValues = []
@@ -96,6 +97,7 @@ def getResults(ModelName):
 						maxStep = step.name
 						maxFrame = frame.incrementNumber
 			if (allFields.has_key(Displacement)):
+				print 'Scanning for maximum displacement magnitude'
 				isDisplacementPresent = 1
 				dispSet = allFields[Displacement]  
 				dispValues = []
@@ -104,21 +106,21 @@ def getResults(ModelName):
 					if (dispValue.magnitude > maxDisp):
 						maxDisp = dispValue.magnitude
 			if (allFields.has_key(Strain)):
+				print 'Scanning for maximum strain'
 				isStrainPresent = 1
 				strainSet = allFields[Strain]  
 				strainValues = []
-				# print("Strain present")
-				# for strainValue in strainSet.values: 
-					# if (strainValue.maxprincipal > maxStrain):
-						# maxStrain = strainValue.maxprincipal				
-			
-	# if(isStressPresent):
-		# print 'Maximum von Mises stress %s is %f in element %d'%(
-			# region, maxMises, maxVMElem)
-		# print 'Location: frame # %d  step:  %s '%(maxFrame,maxStep)
-	# else:
-		# print 'Stress output is not available in' \
-				# 'the output database : %s\n' %(odb.name)     
+				for strainValue in strainSet.values:
+					if (strainValue.maxPrincipal > maxStrain):
+						maxStrain = strainValue.maxPrincipal		
+	print maxStrain
+	if(isStressPresent):
+		print 'Maximum von Mises stress %s is %f in element %d'%(
+			region, maxMises, maxVMElem)
+		#print 'Location: frame # %d  step:  %s '%(maxFrame,maxStep)
+	else:
+		print 'Stress output is not available in' \
+				'the output database : %s\n' %(odb.name)     
 
 	odb.close()
 	return maxMises, maxDisp

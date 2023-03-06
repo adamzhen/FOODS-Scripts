@@ -1,0 +1,2 @@
+Model, Load, Name, Value (cm), Max Mises Stress (Pa), Max Displacement (cm), V (cm^3), SA (cm^2), SA:V (1/cm)
+1, 1, L, 14.000, 407606912, 0.4192, 3.054, 69.218, 22.66214
