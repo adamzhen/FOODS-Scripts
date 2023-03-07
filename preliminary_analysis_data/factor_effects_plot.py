@@ -2,17 +2,24 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-ind = 3 # index of data to be used for sorting
-nameind = 1 # index of name of parameter
+ind = 4 # index of data to be used for sorting
+nameind = 2 # index of name of parameter
+loadn = 2 # load case (1 or 2)
 
 # read in data
-with open('preliminary_analysis_data/PostDataLoad1.txt', 'r') as f:
+with open(f'preliminary_analysis_data/PostDataLoad{loadn}.txt', 'r') as f:
     data = [row.split(', ') for row in f.read().split('\n')]
     header = data.pop(0)
     data.pop() # removes last empty row
     for i in range(len(data)): # converting strings to floats
         for j in range(nameind+1, len(data[i])):
             data[i][j] = float(data[i][j])
+# read in mean data
+with open(f'preliminary_analysis_data/PostDataLoad{loadn}Mean.txt', 'r') as f:
+    mdata = [row.split(', ') for row in f.read().split('\n')]
+    mdata.pop(0)
+    mdata.pop() # removes last empty row
+    mean = float(mdata[0][ind])
 
 # Sorting Data by impact on SA:V
 paramdict = {}
@@ -26,7 +33,7 @@ paramdict = dict(sorted(paramdict.items(), reverse=True, key=lambda x:x[1]))
 
 datadict = {}
 for i in range(0, len(data), 2):
-    datadict[data[i][nameind]] = [data[i][ind], data[i+1][ind]]
+    datadict[data[i][nameind]] = [data[i][ind], mean, data[i+1][ind]]
 for k, v in paramdict.items():
     paramdict[k] = datadict[k]
 
@@ -37,8 +44,8 @@ for k, v in paramdict.items():
 fig, ax = plt.subplots()
 for k, v in paramdict.items():
     name = k
-    x = np.array(['Min', 'Max'])
-    y = np.array([v[0], v[1]])
+    x = np.array(['Min', 'Mean', 'Max'])
+    y = np.array([v[0], v[1], v[2]])
     ax.plot(x,y, label=name, linewidth = 2.0)
     ax.set_xlabel('Parameter')
     ax.set_ylabel('Max Mises Stress (Pa)')
