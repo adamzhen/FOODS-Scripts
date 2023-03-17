@@ -108,7 +108,7 @@ rx = W3 * 0.25
 
 # Seed Size
 seedScale = 100 # number of elements that will fit across one diagonal of the fork handle
-seedSize = sqrt( (((W4-W3)/2)**2) + (L3**2) ) / seedScale / 100 # calculating seed size and converting from cm to m
+seedSize = T / 4 / 100 # sqrt( (((W4-W3)/2)**2) + (L3**2) ) / seedScale / 100 # calculating seed size and converting from cm to m
 
 ####################################
 ### Calculated Properties/Values ###
@@ -185,7 +185,7 @@ DataFile = open('PostData.txt','w')
 DataFile.write('Model, Load, ')
 for name in paramNames:
 	DataFile.write(name + ", ")
-DataFile.write('Treatment Combo, Max Mises Stress (Pa), Max Displacement (cm), Max Strain, Node 1 Displacement (cm), Node 2 Displacement (cm), SA:V (1/cm)\n')
+DataFile.write('Treatment Combo, SAV (1/cm), Max Mises Stress (MPa), Max Displacement (cm), Max Strain, Node 1 Displacement (cm), Node 2 Displacement (cm)\n')
 DataFile.close()
 
 Mdb()
@@ -207,12 +207,12 @@ for var1 in range(2):
 						for var7 in range(2):
 							vars[6] = var7
 							
-							#vars = [0, 0, 1, 1, 0, 0, 0]
+							#vars = [0, 0, 0, 0, 0, 0, 0]
 							print("Model %1.0f" % (modelNum))
 							print("Load Case %1.0f" % (loadn))
 							print vars
 							
-							if modelNum >= 91: # CHANGE THIS TO RUN CERTAIN PARTS OF THE FULL FACTORIAL
+							if modelNum <= 1: # CHANGE THIS TO RUN CERTAIN PARTS OF THE FULL FACTORIAL
 								# finds values of the parameters
 								varValues = vars[:]
 								for n in range(nParams):
@@ -282,7 +282,10 @@ for var1 in range(2):
 								Tx2 = T * 0.3
 								rx = W3 * 0.2
 
-								
+								# Seed Size
+								seedScale = 100 # number of elements that will fit across one diagonal of the fork handle
+								seedSize = T / 4 / 100 # sqrt( (((W4-W3)/2)**2) + (L3**2) ) / seedScale / 100 # calculating seed size and converting from cm to m
+
 								ModelName = 'Model-%s' % (modelNum)
 								mdb.Model(name=ModelName, modelType=STANDARD_EXPLICIT)
 								
@@ -700,12 +703,18 @@ for var1 in range(2):
 								v, e, d = p.vertices, p.edges, p.datums
 								p.PartitionCellByPlaneThreePoints(point1=((W3/2-T2)/100, L3/100, T1/100), point2=(-(W3/2-T2)/100, L3/100, T1/100), point3=((W3/2-T2)/100, T2/100, T1/100), 
 									cells=pickedCells) # Partition main handle thickness from outer ridges
-									
-								# p = mdb.models['Model-1'].parts['Fork-m']
+								p = mdb.models[ModelName].parts['Fork-m']
+								p.DatumPlaneByPrincipalPlane(principalPlane=XZPLANE, offset=(L-tipBuffer)/100)
+								p = mdb.models[ModelName].parts['Fork-m']
+								c = p.cells
+								pickedCells = c.findAt((((Ws+Wt2)/2/100, (L3+l5)/100, (h5)/100), ))
+								d = p.datums
+								p.PartitionCellByDatumPlane(datumPlane=d[4], cells=pickedCells) # Partition tips of fork tines
+								# p = mdb.models[ModelName].parts['Fork-m']
 								# e = p.edges
 								# pickedEdges = e.findAt((((Ws+Wt2)/2/100, L/100, (h7)/100), ))
 								# p.PartitionEdgeByParam(edges=pickedEdges, parameter=0.99) # Partition to force node at this particular point
-								# p = mdb.models['Model-1'].parts['Fork-m']
+								# p = mdb.models[ModelName].parts['Fork-m']
 								# e = p.edges
 								# pickedEdges = e.findAt((((W1-Wtip)/2/100, L/100, (h7)/100), ))
 								# p.PartitionEdgeByParam(edges=pickedEdges, parameter=0.99) # Partition to force node at this particular point
@@ -737,13 +746,16 @@ for var1 in range(2):
 								print 'Assigning the Sections'
 								p = mdb.models[ModelName].parts['Fork-m']
 								c = p.cells
-								cells = c.getSequenceFromMask(mask=('[#3ffff ]', ), )
+								cells = c.findAt(((0.0, (L3+L2)/100, h4/100), ), ((0.0, (L3/2)/100, 0.0), ), # Above neck & Main handle
+									((0.0, (L3-Lx/2)/100, (T1+Tx1)/100), ), ((0, (T2/2)/100, T/100), ), # X-Support & Handle ridges
+									(((W1-Wtip)/2/100, L/100, (h7)/100), ), ((-(W1-Wtip)/2/100, L/100, (h7)/100), ), # Outer tine tips
+									(((Ws+Wt2)/2/100, L/100, (h7)/100), ), ((-(Ws+Wt2)/2/100, L/100, (h7)/100), )) # Inner tine tips
 								region = p.Set(cells=cells, name='Fork-Set')
 								p = mdb.models[ModelName].parts['Fork-m']
 								p.SectionAssignment(region=region, sectionName='PLA-Section', offset=0.0, 
 									offsetType=MIDDLE_SURFACE, offsetField='', 
 									thicknessAssignment=FROM_SECTION)
-
+	
 								#Assemble Parts
 								print 'Placing Parts in Space'
 								a = mdb.models[ModelName].rootAssembly
@@ -907,10 +919,8 @@ for var1 in range(2):
 									#Define Sets
 									print 'Defining Sets'
 									
-									flattip1 = Wtip - (2*fr1 - fr1/L11 * (Wt1-Wtip)) # width of flat part of outer tip in cm
+									flattip1 = Wtip - (2*fr1 - fr1/L11 * 2*((W1/2-Wtip) - (1.5*Ws+Wt2))) # width of flat part of outer tip in cm
 									flattip2 = Wtip - (2*fr1 - fr1/L11 * (Wt2-Wtip)) # width of flat part of inner tip in cm
-									print flattip1
-									print flattip2
 									# Create reference points
 									a = mdb.models[ModelName].rootAssembly
 									e1 = a.instances['Fork-m-1'].edges
@@ -923,15 +933,15 @@ for var1 in range(2):
 									a = mdb.models[ModelName].rootAssembly
 									
 									# Create coupling constraints
-									a = mdb.models['Model-1'].rootAssembly
+									a = mdb.models[ModelName].rootAssembly
 									r1 = a.referencePoints
 									refPoints1=(r1[34], )
 									region1=a.Set(referencePoints=refPoints1, name='m_Set-2')
-									a = mdb.models['Model-1'].rootAssembly
+									a = mdb.models[ModelName].rootAssembly
 									v1 = a.instances['Fork-m-1'].vertices
 									verts1 = v1.findAt((((Ws+Wt2-flattip2)/2/100, L/100, (h7)/100), ))
 									region2=a.Set(vertices=verts1, name='s_Set-2')
-									mdb.models['Model-1'].Coupling(name='Constraint-2-1', controlPoint=region1, 
+									mdb.models[ModelName].Coupling(name='Constraint-2-1', controlPoint=region1, 
 										surface=region2, influenceRadius=WHOLE_SURFACE, couplingType=KINEMATIC, 
 										localCsys=None, u1=ON, u2=ON, u3=ON, ur1=ON, ur2=ON, ur3=ON)
 									
@@ -953,25 +963,21 @@ for var1 in range(2):
 								p = mdb.models[ModelName].parts['Fork-m']
 								c = p.cells
 								pickedRegions = c.findAt(((0.0, (L3+L2)/100, h4/100), ), ((0.0, (L3/2)/100, 0.0), ), # Above neck & Main handle
-									((0.0, (L3-Lx/2)/100, (T1+Tx1)/100), ), ((0, (T2/2)/100, T/100), )) # X-Support & Handle ridges
+									((0.0, (L3-Lx/2)/100, (T1+Tx1)/100), ), ((0, (T2/2)/100, T/100), ), # X-Support & Handle ridges
+									(((W1-Wtip)/2/100, L/100, (h7)/100), ), ((-(W1-Wtip)/2/100, L/100, (h7)/100), )) # Tine tips
 								p.setMeshControls(regions=pickedRegions, elemShape=TET, technique=FREE)
 								elemType1 = mesh.ElemType(elemCode=C3D20R)
 								elemType2 = mesh.ElemType(elemCode=C3D15)
 								elemType3 = mesh.ElemType(elemCode=C3D10)
 								p = mdb.models[ModelName].parts['Fork-m']
 								c = p.cells
-								cells = c.findAt(((0.0, (L3+L2)/100, h4/100), ), ((0.0, (L3/2)/100, 0.0), ), # Above neck & Main handle
-									((0.0, (L3-Lx/2)/100, (T1+Tx1)/100), ), ((0, (T2/2)/100, T/100), )) # X-Support & Handle ridges
+								pickedRegions = c.findAt(((0.0, (L3+L2)/100, h4/100), ), ((0.0, (L3/2)/100, 0.0), ), # Above neck & Main handle
+									((0.0, (L3-Lx/2)/100, (T1+Tx1)/100), ), ((0, (T2/2)/100, T/100), ), # X-Support & Handle ridges
+									(((W1-Wtip)/2/100, L/100, (h7)/100), ), ((-(W1-Wtip)/2/100, L/100, (h7)/100), )) # Tine tips
 								pickedRegions =(cells, )
 								p.setElementType(regions=pickedRegions, elemTypes=(elemType1, elemType2, 
 									elemType3))
 								# seed part
-								p = mdb.models[ModelName].parts['Fork-m']
-								c = p.cells
-								cells = c.getSequenceFromMask(mask=('[#8 ]', ), )
-								pickedRegions =(cells, )
-								p.setElementType(regions=pickedRegions, elemTypes=(elemType1, elemType2, 
-									elemType3))
 								p = mdb.models[ModelName].parts['Fork-m']
 								p.seedPart(size=seedSize, deviationFactor=0.1, minSizeFactor=0.1)
 								# mesh Fork-m
@@ -1005,7 +1011,7 @@ for var1 in range(2):
 								# delete lock file, which for some reason tends to hang around, if it exists
 								if os.access('%s.lck'%ModelName,os.F_OK):
 									os.remove('%s.lck'%ModelName)
-									print 'lck file removed'
+									# print 'lck file removed'
 
 								# Runs job and extracts ODB data if RUNJOB is True
 								if RUNJOB:
@@ -1052,7 +1058,7 @@ for var1 in range(2):
 								for n in range(nParams):
 									if vars[n]:
 										treatmentCombination += treatmentNames[n]
-								DataFile.write('%s, %1.0f, %1.4f, %1.4f, %1.4f, %1.4f, %1.5f\n' % (treatmentCombination, S, U*100, E, Un1*100, Un2*100, SA/V)) 
+								DataFile.write('%s, %1.3f, %1.1f, %1.3f, %1.3f, %1.3f, %1.3f\n' % (treatmentCombination, SA/V, S/1000000, U*100, E, Un1*100, Un2*100)) 
 								DataFile.close()
 							
 							modelNum += 1
