@@ -26,8 +26,12 @@ def getResults(ModelName, stepName, loadn):
 
 
 	# Selecting the node(s) to be queried
-	NODE1 = odb.rootAssembly.nodeSets['ASSEMBLY_CONSTRAINT-%1.0f-1_REFERENCE_POINT' % (loadn)]
-	NODE2 = odb.rootAssembly.nodeSets['ASSEMBLY_CONSTRAINT-%1.0f-2_REFERENCE_POINT' % (loadn)]
+	if loadn==1:
+		NODE1 = odb.rootAssembly.nodeSets['ASSEMBLY_CONSTRAINT-%1.0f-1_REFERENCE_POINT' % (loadn)]
+		NODE2 = odb.rootAssembly.nodeSets['ASSEMBLY_CONSTRAINT-%1.0f-2_REFERENCE_POINT' % (loadn)]
+	elif loadn==2:
+		NODE1 = odb.rootAssembly.nodeSets['M_SET-NODE-1']
+		NODE2 = odb.rootAssembly.nodeSets['M_SET-NODE-2']
 	
 	# Retrieve Y-displacements at the splines/connectors
 	print 'Retrieving ALL final displacements at ALL points'
@@ -85,9 +89,9 @@ def getResults(ModelName, stepName, loadn):
 		print 'Processing Step:', step.name
 		for frame in step.frames:
 			allFields = frame.fieldOutputs
-			#print(allFields.keys())
+			print 'Scanning for max VM STRESS, max strain, max displacement, and displacement at 2 nodes'
 			if (allFields.has_key(Stress)):
-				#print 'Scanning for maximum VM STRESS'
+				#print 'Scanning for max VM STRESS, max strain, max displacement, and displacement at 2 nodes'
 				isStressPresent = 1
 				stressSet = allFields[Stress]  
 				misesValues = []

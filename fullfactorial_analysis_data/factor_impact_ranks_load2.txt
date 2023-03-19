@@ -1,0 +1,8 @@
+ , Max Mises Stress (MPa), Max Displacement (cm), Max Strain, Node 1 Displacement (cm), Node 2 Displacement (cm), SAV (1/cm)
+L, 5, 2, 3, 2, 2, 5
+L11, 6, 7, 6, 7, 7, 6
+T, 1, 1, 1, 1, 1, 2
+T1, 4, 4, 2, 4, 4, 1
+h4, 7, 6, 7, 6, 6, 4
+T2, 2, 3, 5, 3, 3, 3
+W3, 3, 5, 4, 5, 5, 7

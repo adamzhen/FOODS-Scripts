@@ -108,7 +108,7 @@ rx = W3 * 0.25
 
 # Seed Size
 seedScale = 100 # number of elements that will fit across one diagonal of the fork handle
-seedSize = T / 4 / 100 # sqrt( (((W4-W3)/2)**2) + (L3**2) ) / seedScale / 100 # calculating seed size and converting from cm to m
+seedSize = 0.1 / 100 # sqrt( (((W4-W3)/2)**2) + (L3**2) ) / seedScale / 100 # calculating seed size and converting from cm to m
 
 ####################################
 ### Calculated Properties/Values ###
@@ -147,7 +147,7 @@ seedSize = T / 4 / 100 # sqrt( (((W4-W3)/2)**2) + (L3**2) ) / seedScale / 100 # 
 
 RUNJOB = True
 modelNum = 1
-loadn = 1
+loadn = 2
 meanParameters = []
 alphabet = ['a','b','c','d','e','f','g','h','i'] # used for treatment combinations
 if loadn==1: # 7 critical parameters
@@ -207,12 +207,12 @@ for var1 in range(2):
 						for var7 in range(2):
 							vars[6] = var7
 							
-							#vars = [0, 0, 0, 0, 0, 0, 0]
-							print("Model %1.0f" % (modelNum))
-							print("Load Case %1.0f" % (loadn))
-							print vars
+							#vars = [0, 1, 0, 1, 1, 1, 1]
+							print("Model %1.0f, Load Case %1.0f" % (modelNum, loadn))
 							
-							if modelNum <= 1: # CHANGE THIS TO RUN CERTAIN PARTS OF THE FULL FACTORIAL
+							if modelNum >= 1 and modelNum <= 128: # CHANGE THIS TO RUN CERTAIN PARTS OF THE FULL FACTORIAL
+								print vars
+								
 								# finds values of the parameters
 								varValues = vars[:]
 								for n in range(nParams):
@@ -284,7 +284,7 @@ for var1 in range(2):
 
 								# Seed Size
 								seedScale = 100 # number of elements that will fit across one diagonal of the fork handle
-								seedSize = T / 4 / 100 # sqrt( (((W4-W3)/2)**2) + (L3**2) ) / seedScale / 100 # calculating seed size and converting from cm to m
+								seedSize = 0.1 / 100 # sqrt( (((W4-W3)/2)**2) + (L3**2) ) / seedScale / 100 # calculating seed size and converting from cm to m
 
 								ModelName = 'Model-%s' % (modelNum)
 								mdb.Model(name=ModelName, modelType=STANDARD_EXPLICIT)
@@ -465,9 +465,9 @@ for var1 in range(2):
 								#s.setPrimaryObject(option=SUPERIMPOSE)
 								p = mdb.models[ModelName].parts['Cut-2-1']
 								p.projectReferencesOntoSketch(sketch=s, filter=COPLANAR_EDGES)
-								s.Line(point1=(0.0, 0.0), point2=(W4/2, 0.0))
-								s.Line(point1=(W4/2, 0.0), point2=(W4/2, -T2))
-								s.Line(point1=(W4/2, -T2), point2=(0.0, -T2))
+								s.Line(point1=(0.0, 0.0), point2=(W4, 0.0))
+								s.Line(point1=(W4, 0.0), point2=(W4, -T2))
+								s.Line(point1=(W4, -T2), point2=(0.0, -T2))
 								s.Line(point1=(0.0, -T2), point2=(0.0, 0.0))
 								p = mdb.models[ModelName].parts['Cut-2-1']
 								f1, e1 = p.faces, p.edges
@@ -710,27 +710,6 @@ for var1 in range(2):
 								pickedCells = c.findAt((((Ws+Wt2)/2/100, (L3+l5)/100, (h5)/100), ))
 								d = p.datums
 								p.PartitionCellByDatumPlane(datumPlane=d[4], cells=pickedCells) # Partition tips of fork tines
-								# p = mdb.models[ModelName].parts['Fork-m']
-								# e = p.edges
-								# pickedEdges = e.findAt((((Ws+Wt2)/2/100, L/100, (h7)/100), ))
-								# p.PartitionEdgeByParam(edges=pickedEdges, parameter=0.99) # Partition to force node at this particular point
-								# p = mdb.models[ModelName].parts['Fork-m']
-								# e = p.edges
-								# pickedEdges = e.findAt((((W1-Wtip)/2/100, L/100, (h7)/100), ))
-								# p.PartitionEdgeByParam(edges=pickedEdges, parameter=0.99) # Partition to force node at this particular point
-								
-								# p = mdb.models[ModelName].parts['Fork-m']
-								# c = p.cells
-								# pickedCells = c.findAt(((0.0, 0.0, (T1+(T+T1)/2)/100), ))
-								# v1, e1, d1 = p.vertices, p.edges, p.datums
-								# p.PartitionCellByPlaneThreePoints(point1=((W4/2-T2)/2/100, T2/100, T1/100), point2=(-(W4/2-T2)/2/100, T2/100, T1/100), point3=((W4/2-T2)/2/100, T2/100, T/100), 
-									# cells=pickedCells) # Partition side & bottom ridges apart, allows for hex meshing but unnecessary for tet
-								# p.DatumPlaneByPrincipalPlane(principalPlane=XZPLANE, offset=(L-fr1)/100)
-								# p = mdb.models[ModelName].parts['Fork-m']
-								# c = p.cells
-								# pickedCells = c.findAt(((0.0, (L3+L2)/100, h4/100), ))
-								# d2 = p.datums
-								# p.PartitionCellByDatumPlane(datumPlane=d2[5], cells=pickedCells)
 
 									
 								# Create Material
@@ -878,7 +857,6 @@ for var1 in range(2):
 									mdb.models[ModelName].Coupling(name='Constraint-1-2', controlPoint=region1, 
 										surface=region2, influenceRadius=WHOLE_SURFACE, couplingType=KINEMATIC, 
 										localCsys=None, u1=ON, u2=ON, u3=ON, ur1=ON, ur2=ON, ur3=ON)
-
 										
 								if loadn==2:
 									#Define Steps
@@ -933,29 +911,52 @@ for var1 in range(2):
 									a = mdb.models[ModelName].rootAssembly
 									
 									# Create coupling constraints
-									a = mdb.models[ModelName].rootAssembly
-									r1 = a.referencePoints
-									refPoints1=(r1[34], )
-									region1=a.Set(referencePoints=refPoints1, name='m_Set-2')
+									# a = mdb.models[ModelName].rootAssembly
+									# r1 = a.referencePoints
+									# refPoints1=(r1[34], )
+									# region1=a.Set(referencePoints=refPoints1, name='m_Set-2')
+									# a = mdb.models[ModelName].rootAssembly
+									# v1 = a.instances['Fork-m-1'].vertices
+									# verts1 = v1.findAt((((Ws+Wt2-flattip2)/2/100, L/100, (h7)/100), ))
+									# region2=a.Set(vertices=verts1, name='s_Set-2')
+									# mdb.models[ModelName].Coupling(name='Constraint-2-1', controlPoint=region1, 
+										# surface=region2, influenceRadius=WHOLE_SURFACE, couplingType=KINEMATIC, 
+										# localCsys=None, u1=ON, u2=ON, u3=ON, ur1=ON, ur2=ON, ur3=ON)
+									
+									# a = mdb.models[ModelName].rootAssembly
+									# r1 = a.referencePoints
+									# refPoints1=(r1[35], )
+									# region1=a.Set(referencePoints=refPoints1, name='m_Set-4')
+									# a = mdb.models[ModelName].rootAssembly
+									# v1 = a.instances['Fork-m-1'].vertices
+									# verts1 = v1.findAt((((W1-Wtip-flattip1)/2/100, L/100, (h7)/100), ))
+									# region2=a.Set(vertices=verts1, name='s_Set-4')
+									# mdb.models[ModelName].Coupling(name='Constraint-2-2', controlPoint=region1, 
+										# surface=region2, influenceRadius=WHOLE_SURFACE, couplingType=KINEMATIC, 
+										# localCsys=None, u1=ON, u2=ON, u3=ON, ur1=ON, ur2=ON, ur3=ON)
+									
+									# Create tie constraints
 									a = mdb.models[ModelName].rootAssembly
 									v1 = a.instances['Fork-m-1'].vertices
 									verts1 = v1.findAt((((Ws+Wt2-flattip2)/2/100, L/100, (h7)/100), ))
-									region2=a.Set(vertices=verts1, name='s_Set-2')
-									mdb.models[ModelName].Coupling(name='Constraint-2-1', controlPoint=region1, 
-										surface=region2, influenceRadius=WHOLE_SURFACE, couplingType=KINEMATIC, 
-										localCsys=None, u1=ON, u2=ON, u3=ON, ur1=ON, ur2=ON, ur3=ON)
-									
+									region1=a.Set(vertices=verts1, name='m_Set-Node-1')
 									a = mdb.models[ModelName].rootAssembly
 									r1 = a.referencePoints
-									refPoints1=(r1[35], )
-									region1=a.Set(referencePoints=refPoints1, name='m_Set-3')
+									refPoints1=(r1[34], )
+									region2=a.Set(referencePoints=refPoints1, name='s_Set-Node-1')
+									mdb.models[ModelName].Tie(name='Tie-2-1', master=region1, slave=region2, 
+										positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
+										
 									a = mdb.models[ModelName].rootAssembly
 									v1 = a.instances['Fork-m-1'].vertices
 									verts1 = v1.findAt((((W1-Wtip-flattip1)/2/100, L/100, (h7)/100), ))
-									region2=a.Set(vertices=verts1, name='s_Set-3')
-									mdb.models[ModelName].Coupling(name='Constraint-2-2', controlPoint=region1, 
-										surface=region2, influenceRadius=WHOLE_SURFACE, couplingType=KINEMATIC, 
-										localCsys=None, u1=ON, u2=ON, u3=ON, ur1=ON, ur2=ON, ur3=ON)
+									region1=a.Set(vertices=verts1, name='m_Set-Node-2')
+									a = mdb.models[ModelName].rootAssembly
+									r1 = a.referencePoints
+									refPoints1=(r1[35], )
+									region2=a.Set(referencePoints=refPoints1, name='s_Set-Node-2')
+									mdb.models[ModelName].Tie(name='Tie-2-2', master=region1, slave=region2, 
+										positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
 									
 								#Mesh Parts
 								print 'Meshing the Baffle'
@@ -1058,7 +1059,7 @@ for var1 in range(2):
 								for n in range(nParams):
 									if vars[n]:
 										treatmentCombination += treatmentNames[n]
-								DataFile.write('%s, %1.3f, %1.1f, %1.3f, %1.3f, %1.3f, %1.3f\n' % (treatmentCombination, SA/V, S/1000000, U*100, E, Un1*100, Un2*100)) 
+								DataFile.write('%s, %1.3f, %1.1f, %1.3f, %1.4f, %1.3f, %1.3f\n' % (treatmentCombination, SA/V, S/1000000, U*100, E, Un1*100, Un2*100)) 
 								DataFile.close()
 							
 							modelNum += 1
