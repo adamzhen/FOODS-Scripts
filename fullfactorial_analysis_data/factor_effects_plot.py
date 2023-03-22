@@ -20,10 +20,13 @@ with open(f'fullfactorial_analysis_data/PostDataFF1Load{loadn}.txt', 'r') as f:
 
 # print(header)
 
-def hexcolors(): # generates NUM_FACTORS RGB colors in a spectrum from blue to red
+def hexcolors(mode): # generates NUM_FACTORS RGB colors in a spectrum from blue to red
   colors = []
   for i in range(NUM_FACTORS):
-    n = i * 1024 / (NUM_FACTORS-1)
+    if mode == 0: # regular plots
+      n = (i) * 1024 / (NUM_FACTORS-1)
+    elif mode == 1: # normalized factor effects pie charts
+      n = (i+5) * 1024 / (NUM_FACTORS+4)
     if (n <= 255):
       r = 0
       g = n
@@ -48,6 +51,7 @@ def hexcolors(): # generates NUM_FACTORS RGB colors in a spectrum from blue to r
   colors.reverse()
   return colors
 
+impacts = [0]*NUM_FACTORS # list of impact scores for each factor
 # Factor Effects Analysis
 with open(f'fullfactorial_analysis_data/factor_impact_ranks_load{loadn}.txt', 'w') as f: # generates text file with factors ranked by impact for each criteria
   if loadn == 1:
@@ -83,6 +87,25 @@ with open(f'fullfactorial_analysis_data/factor_impact_ranks_load{loadn}.txt', 'w
       factordict[name] = abs(score)
       sortedfactors = sorted(factordict.items(), reverse=True, key=lambda x:x[1])
       rankedfactors = [x[0] for x in sortedfactors] # list of factor names in order of impact
+    # Calculating overall impact score
+    diffs = []
+    for a in averages:
+       diffs.append(abs(a[1]-a[0]))
+    totaldiff = sum(diffs)
+    for i in range(len(factors)):
+      if c == "SAV (1/cm)":
+        impacts[i] += diffs[i]/totaldiff * 50
+      else:
+        impacts[i] += diffs[i]/totaldiff * 10
+    # diffs = []
+    # for a in averages:
+    #    diffs.append(abs(a[1]-a[0]))
+    # maxdiff = max(diffs)
+    # for i in range(len(factors)):
+    #   if c == "SAV (1/cm)":
+    #     impacts[i] += diffs[i]/maxdiff * 50
+    #   else:
+    #     impacts[i] += diffs[i]/maxdiff * 10
     # Creating factor effects plots
     for i in range(len(factors)):
       name = header[i+2]
@@ -90,7 +113,7 @@ with open(f'fullfactorial_analysis_data/factor_impact_ranks_load{loadn}.txt', 'w
       rankstrings[i] += f", {rank+1}"
       x = np.array(['Min', 'Max'])
       y = np.array([averages[i][1], averages[i][0]])
-      ax.plot(x,y, label=name, linewidth = 2.0, color = hexcolors()[i])
+      ax.plot(x,y, label=name, linewidth = 2.0, color = hexcolors(0)[i])
       ax.set_xlabel('Parameter')
       ax.set_ylabel(c)
       ax.set_title(f'Effect of parameters on {dispc}')
@@ -100,3 +123,18 @@ with open(f'fullfactorial_analysis_data/factor_impact_ranks_load{loadn}.txt', 'w
     print(f"{dispc}")
   for row in rankstrings:
       f.write(f"{row}\n")
+#print(hexcolors(1))
+fig, ax = plt.subplots()
+impactdicts = dict(zip(header[2:9], impacts))
+sortedimpacts = sorted(impactdicts.items(), reverse=True, key=lambda x:x[1])
+pielabels = []
+piey = []
+for i in range(NUM_FACTORS):
+  pielabels.append(sortedimpacts[i][0])
+  piey.append(sortedimpacts[i][1])
+print(sortedimpacts)
+piecolors = hexcolors(1)[:-2] + [(0.0, 1.0, 0.87), (0.0, 0.75, 1.0)]
+ax.pie(piey, labels=pielabels, textprops={'fontsize': 14}, radius = 1.25, colors=piecolors, labeldistance=1.08)
+#plt.show()
+plt.savefig(f'fullfactorial_analysis_data/Normalized Impact Pie - Load {loadn}.png')
+plt.close()
