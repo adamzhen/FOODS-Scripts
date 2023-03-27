@@ -1,0 +1,21 @@
+from math import *
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.optimize import minimize 
+
+# Define the function to be optimized
+def f(xy):
+    x, y = xy
+    return(x*y)
+
+# Set the bounds
+bounds = [(-1, 1), (-1, 1)]
+
+# Set the initial guess for the optimizer
+xy0 = np.array([1.0, 1.0])
+
+# Use the minimize function to optimize the function
+result = minimize(f, xy0, bounds=bounds)
+
+# Plot the function and the optimized point
+print(result)
