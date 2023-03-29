@@ -219,8 +219,8 @@ def abaqusFcn(value):
 		
 	return score
 
-F = 10
-seedSize = 0.038
+F = 1900000
+seedSize = 0.005
 
 from math import *
 import matplotlib.pyplot as plt
@@ -228,15 +228,17 @@ import numpy as np
 from scipy.optimize import minimize 
 
 # Set the bounds
-bounds = [(0, 2), (0, 0.75), (0, 0.75)]
+bounds = [(0, 2), (0, 0.5), (0, 0.5)]
 
 # Set the initial guess for the optimizer
-xy0 = np.array([1, 0, 0])
+xy0 = np.array([0.0, 0.4296877110157513, 0.4296877210157513])
 
-# Use the minimize function to optimize the function
-result = minimize(abaqusFcn, xy0, bounds=bounds)
+RUNOPTIMIZE = True
+if RUNOPTIMIZE:
+	# Use the minimize function to optimize the function
+	result = minimize(abaqusFcn, xy0, bounds=bounds)
 
-# Plot the function and the optimized point
-print(result)
-
-# print(abaqusFcn([0.2,0.3,0.7,0.1])) # height of right side, radius of 1st circle, radius of 2nd circle, thickness
+	# Plot the function and the optimized point
+	print(result)
+else:
+	print(abaqusFcn([0.2,0.3,0.7,0.1])) # height of right side, radius of 1st circle, radius of 2nd circle, thickness
