@@ -29,6 +29,9 @@ from Post_P_Script import getResults
 ### (i.e., the contents of the loop below are intended)
 session.journalOptions.setValues(replayGeometry=COORDINATE, recoverGeometry=COORDINATE)
 
+DataFile = open('PostData-MassVM.txt','w')
+DataFile.write('')
+DataFile.close()
 with open('RunInfo.txt', 'w') as f:
 	f.write("a, b, c, score\n")
 
@@ -219,8 +222,8 @@ def abaqusFcn(value):
 		
 	return score
 
-F = 1900000
-seedSize = 0.005
+F = 2700000
+seedSize = 0.01
 
 from math import *
 import matplotlib.pyplot as plt
@@ -241,4 +244,4 @@ if RUNOPTIMIZE:
 	# Plot the function and the optimized point
 	print(result)
 else:
-	print(abaqusFcn([0.2,0.3,0.7,0.1])) # height of right side, radius of 1st circle, radius of 2nd circle, thickness
+	print(abaqusFcn([0.0, 0.4296877110157513, 0.4296877210157513])) # height of right side, radius of 1st circle, radius of 2nd circle, thickness
