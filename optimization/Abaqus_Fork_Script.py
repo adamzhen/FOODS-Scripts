@@ -184,8 +184,9 @@ for loadn in range(1, 3): # Loads 1 and 2
 
 		# Seed Size
 		seedScale = 100 # number of elements that will fit across one diagonal of the fork handle
-		seedSize = 0.1 / 100 # sqrt( (((W4-W3)/2)**2) + (L3**2) ) / seedScale / 100 # calculating seed size and converting from cm to m
-
+		seedSize = 0.05 / 100 # sqrt( (((W4-W3)/2)**2) + (L3**2) ) / seedScale / 100 # calculating seed size and converting from cm to m
+		handleSeedSize = 0.01
+		
 		ModelName = 'Model-%s' % (modelNum)
 		mdb.Model(name=ModelName, modelType=STANDARD_EXPLICIT)
 		
@@ -598,18 +599,25 @@ for loadn in range(1, 3): # Loads 1 and 2
 		p.PartitionCellByPlaneThreePoints(point1=(W3/2/100, L3/100, 0), point2=(-W3/2/100, L3/100, 0), 
 			point3=(W3/2/100, L3/100, T), cells=pickedCells) # Partition handle from part above neck
 		p = mdb.models[ModelName].parts['Fork-m']
-		c = p.cells
-		pickedCells = c.findAt(((0.0, L3/2/100, 0.0), ))
-		v, e, d = p.vertices, p.edges, p.datums
-		p.PartitionCellByPlaneThreePoints(point1=((W3/2-T2)/100, L3/100, T1/100), point2=(-(W3/2-T2)/100, L3/100, T1/100), point3=((W3/2-T2)/100, T2/100, T1/100), 
-			cells=pickedCells) # Partition main handle thickness from outer ridges
-		p = mdb.models[ModelName].parts['Fork-m']
 		p.DatumPlaneByPrincipalPlane(principalPlane=XZPLANE, offset=(L-tipBuffer)/100)
 		p = mdb.models[ModelName].parts['Fork-m']
 		c = p.cells
 		pickedCells = c.findAt((((Ws+Wt2)/2/100, (L3+l5)/100, (h5)/100), ))
 		d = p.datums
-		p.PartitionCellByDatumPlane(datumPlane=d[4], cells=pickedCells) # Partition tips of fork tines
+		p.PartitionCellByDatumPlane(datumPlane=d[3], cells=pickedCells) # Partition tips of fork tines
+		p = mdb.models[ModelName].parts['Fork-m']
+		p.DatumPlaneByPrincipalPlane(principalPlane=XZPLANE, offset=(L3/100-handleSeedSize))
+		p = mdb.models[ModelName].parts['Fork-m']
+		c = p.cells
+		pickedCells = c.findAt(((0.0, L3/2/100, 0.0), ))
+		d = p.datums
+		p.PartitionCellByDatumPlane(datumPlane=d[5], cells=pickedCells) # Partition handle
+		p = mdb.models[ModelName].parts['Fork-m']
+		c = p.cells
+		pickedCells = c.findAt(((0.0, L3/2/100, 0.0), ))
+		v, e, d = p.vertices, p.edges, p.datums
+		# p.PartitionCellByPlaneThreePoints(point1=((W3/2-T2)/100, L3/100, T1/100), point2=(-(W3/2-T2)/100, L3/100, T1/100), point3=((W3/2-T2)/100, T2/100, T1/100), 
+			# cells=pickedCells) # Partition main handle thickness from outer ridges
 
 			
 		# Create Material
@@ -625,11 +633,11 @@ for loadn in range(1, 3): # Loads 1 and 2
 		print 'Assigning the Sections'
 		p = mdb.models[ModelName].parts['Fork-m']
 		c = p.cells
-		cells = c.findAt(((0.0, (L3+L2)/100, h4/100), ), ((0.0, (L3/2)/100, 0.0), ), # Above neck & Main handle
-			((0.0, (L3-Lx/2)/100, (T1+Tx1)/100), ), ((0, (T2/2)/100, T/100), ), # X-Support & Handle ridges
-			(((W1-Wtip)/2/100, L/100, (h7)/100), ), ((-(W1-Wtip)/2/100, L/100, (h7)/100), ), # Outer tine tips
-			(((Ws+Wt2)/2/100, L/100, (h7)/100), ), ((-(Ws+Wt2)/2/100, L/100, (h7)/100), )) # Inner tine tips
-		region = p.Set(cells=cells, name='Fork-Set')
+		# cells = c.findAt(((0.0, (L3+L2)/100, h4/100), ), ((0.0, (L3/2)/100, 0.0), ), # Above neck & Main handle
+			# ((0.0, (L3-Lx/2)/100, (T1+Tx1)/100), ), ((0, (T2/2)/100, T/100), ), # X-Support & Handle ridges
+			# (((W1-Wtip)/2/100, L/100, (h7)/100), ), ((-(W1-Wtip)/2/100, L/100, (h7)/100), ), # Outer tine tips
+			# (((Ws+Wt2)/2/100, L/100, (h7)/100), ), ((-(Ws+Wt2)/2/100, L/100, (h7)/100), )) # Inner tine tips
+		region = p.Set(cells=p.cells, name='Fork-Set')
 		p = mdb.models[ModelName].parts['Fork-m']
 		p.SectionAssignment(region=region, sectionName='PLA-Section', offset=0.0, 
 			offsetType=MIDDLE_SURFACE, offsetField='', 
@@ -863,24 +871,38 @@ for loadn in range(1, 3): # Loads 1 and 2
 		# set mesh controls
 		p = mdb.models[ModelName].parts['Fork-m']
 		c = p.cells
-		pickedRegions = c.findAt(((0.0, (L3+L2)/100, h4/100), ), ((0.0, (L3/2)/100, 0.0), ), # Above neck & Main handle
-			((0.0, (L3-Lx/2)/100, (T1+Tx1)/100), ), ((0, (T2/2)/100, T/100), ), # X-Support & Handle ridges
-			(((W1-Wtip)/2/100, L/100, (h7)/100), ), ((-(W1-Wtip)/2/100, L/100, (h7)/100), )) # Tine tips
-		p.setMeshControls(regions=pickedRegions, elemShape=TET, technique=FREE)
+		# pickedRegions = c.findAt(((0.0, (L3+L2)/100, h4/100), ), ((0.0, (L3/2)/100, 0.0), ), # Above neck & Main handle
+			# ((0.0, (L3-Lx/2)/100, (T1+Tx1)/100), ), ((0, (T2/2)/100, T/100), ), # X-Support & Handle ridges
+			# (((W1-Wtip)/2/100, L/100, (h7)/100), ), ((-(W1-Wtip)/2/100, L/100, (h7)/100), )) # Tine tips
+		# pickedRegions =(cells, )
+		p.setMeshControls(regions=p.cells, elemShape=TET, technique=FREE)
 		elemType1 = mesh.ElemType(elemCode=C3D20R)
 		elemType2 = mesh.ElemType(elemCode=C3D15)
 		elemType3 = mesh.ElemType(elemCode=C3D10)
 		p = mdb.models[ModelName].parts['Fork-m']
 		c = p.cells
-		pickedRegions = c.findAt(((0.0, (L3+L2)/100, h4/100), ), ((0.0, (L3/2)/100, 0.0), ), # Above neck & Main handle
-			((0.0, (L3-Lx/2)/100, (T1+Tx1)/100), ), ((0, (T2/2)/100, T/100), ), # X-Support & Handle ridges
-			(((W1-Wtip)/2/100, L/100, (h7)/100), ), ((-(W1-Wtip)/2/100, L/100, (h7)/100), )) # Tine tips
-		pickedRegions =(cells, )
+		# pickedRegions = c.findAt(((0.0, (L3+L2)/100, h4/100), ), ((0.0, (L3/2)/100, 0.0), ), # Above neck & Main handle
+			# ((0.0, (L3-Lx/2)/100, (T1+Tx1)/100), ), ((0, (T2/2)/100, T/100), ), # X-Support & Handle ridges
+			# (((W1-Wtip)/2/100, L/100, (h7)/100), ), ((-(W1-Wtip)/2/100, L/100, (h7)/100), )) # Tine tips
+		# pickedRegions =(cells, )
+		pickedRegions =(c, )
 		p.setElementType(regions=pickedRegions, elemTypes=(elemType1, elemType2, 
 			elemType3))
 		# seed part
 		p = mdb.models[ModelName].parts['Fork-m']
 		p.seedPart(size=seedSize, deviationFactor=0.1, minSizeFactor=0.1)
+		# local seed handle
+		p = mdb.models[ModelName].parts['Fork-m']
+		e = p.edges
+		midHandleX = (W3 + (W4-W3)/2) / 2 # X-coordinate of handle edge whe Y = L3/2
+		lowHandleX = W3/2 + (W4-W3)/2 * (L3-T2)/L3 - T2 # X-coordinate of inner handle edge whe Y = T2
+		pickedEdges = e.findAt(((0,0,0), ), ((0,0,T/100), ), ((0,T2/100,T1/100), ), ((0,T2/100,T/100), ), 
+			((-W4/4/100,0,0), ), ((-W4/4/100,0,T/100), ), ((-W4/4/100,T2/100,T1/100), ), ((-W4/4/100,T2/100,T/100), ), 
+			((W4/2/100, 0, T/2/100), ), ((-W4/2/100, 0, T/2/100), ), ((lowHandleX/100, T2/100, T/2/100), ), ((-lowHandleX/100, T2/100, T/2/100), ), 
+			((midHandleX/100, L3/2/100, 0.0), ), ((-midHandleX/100, L3/2/100, 0.0), ), ((midHandleX/100, L3/2/100, T/100), ), ((-midHandleX/100, L3/2/100, T/100), ), 
+			(((midHandleX-T2)/100, L3/2/100, T1/100), ), ((-(midHandleX-T2)/100, L3/2/100, T1/100), ), (((midHandleX-T2)/100, L3/2/100, T/100), ), ((-(midHandleX-T2)/100, L3/2/100, T/100), )) 
+		p.seedEdgeBySize(edges=pickedEdges, size=handleSeedSize, deviationFactor=0.1, 
+			minSizeFactor=0.1, constraint=FINER)
 		# mesh Fork-m
 		p = mdb.models[ModelName].parts['Fork-m']
 		p.generateMesh()
@@ -926,7 +948,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 		##########################################
 		
 		print 'Pulling data from ODB'
-		results = getResults(ModelName, stepName, n)
+		results = getResults(ModelName, stepName, loadn)
 		S = results[0]
 		U = results[1]
 		E = results[2]
@@ -951,13 +973,16 @@ for loadn in range(1, 3): # Loads 1 and 2
 		# DataFile.close()
 
 		# writing outputs for optimization
-		yield_stress = 60e6 # Source: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6926899/
+		yield_stress = 60e6 # 60 MPa, Source: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6926899/
 		safety_factor = 1.2
-		if S <= yield_stress*safety_factor and not failure:
+		if S <= yield_stress/safety_factor and not failure:
 			score = -SA/V # this is negative in order to maximize using scipy minimize
 		else:
 			failure = True
 			score = 0
+		
+		with open('all_outputs.txt', 'a') as fileObj:
+			fileObj.write('%d, %1.3f, %1.1f, %1.3f, %1.4f, %1.3f, %1.3f\n' % (loadn, SA/V, S/1000000, U*100, E, Un1*100, Un2*100)) 
 		
 	modelNum += 1
 
@@ -965,8 +990,6 @@ for loadn in range(1, 3): # Loads 1 and 2
 
 with open('outputs.txt', 'w') as fileObj:
 	fileObj.write(str(score))
-with open('all_outputs.txt', 'a') as fileObj:
-	fileObj.write('%1.3f, %1.1f, %1.3f, %1.4f, %1.3f, %1.3f\n' % (SA/V, S/1000000, U*100, E, Un1*100, Un2*100)) 
 
 		
 print 'DONE!!'

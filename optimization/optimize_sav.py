@@ -55,7 +55,6 @@ def normalize(x, bounds, inverse=False):
 
 		## Denormalize
 		else:
-			print (domain[i] * x[i] + bounds[0][i])
 			x_normalized[i] = domain[i] * x[i] + bounds[0, i]
 	
 	print x_normalized
@@ -151,6 +150,7 @@ def jac(x):
 # x0s = [0.0, 1.0]
 
 ## Initial total skin thickness guess
+# T, T1, T2, L, h4, W3
 x0 = np.array([1.0, 0.0, 0.0, 0.0, 0.0, 0.0]) # [0.0, 1.0]
 
 run_U = objective_function(x0)
