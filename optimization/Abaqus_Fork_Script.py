@@ -665,7 +665,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 			print 'Defining Loads'
 
 			# Load-1 (Vertical)
-			F1 = 40.0 # Newtons
+			F1 = 5.0 # Newtons
 			Asurf1 = (L3 * (W3+W4) / 2) / (100**2) # Area of Surf-1 converted from cm^2 to m^2
 			a = mdb.models[ModelName].rootAssembly
 			s1 = a.instances['Fork-m-1'].faces
@@ -782,7 +782,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 			side1Faces1 = s1.findAt((((Ws+Wt2)/2/100, (L3+l5)/100, (h5)/100), ))
 			region = a.Surface(side1Faces=side1Faces1, name='Surf-2')
 			# calculating area and pressure
-			F2 = 3.0 # Newtons
+			F2 = 5.0 # Newtons
 			surf2Face = s1.findAt(((Ws+Wt2)/2/100, (L3+l5)/100, (h5)/100))
 			Asurf2 = surf2Face.getSize()
 			mdb.models[ModelName].SurfaceTraction(name=loadName, createStepName=stepName, 
@@ -974,7 +974,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 
 		# writing outputs for optimization
 		yield_stress = 60e6 # 60 MPa, Source: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6926899/
-		safety_factor = 1.2
+		safety_factor = 1.1
 		if S <= yield_stress/safety_factor and not failure:
 			score = -SA/V # this is negative in order to maximize using scipy minimize
 		else:
@@ -982,7 +982,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 			score = 0
 		
 		with open('all_outputs.txt', 'a') as fileObj:
-			fileObj.write('%d, %1.3f, %1.1f, %1.3f, %1.4f, %1.3f, %1.3f\n' % (loadn, SA/V, S/1000000, U*100, E, Un1*100, Un2*100)) 
+			fileObj.write('%d, %1.3f, %1.3f, %1.1f, %1.3f, %1.4f, %1.3f, %1.3f\n' % (loadn, score, SA/V, S/1000000, U*100, E, Un1*100, Un2*100)) 
 		
 	modelNum += 1
 

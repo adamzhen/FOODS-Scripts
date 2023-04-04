@@ -57,8 +57,6 @@ def normalize(x, bounds, inverse=False):
 		else:
 			x_normalized[i] = domain[i] * x[i] + bounds[0, i]
 	
-	print x_normalized
-	
 	## If input was not an array, return a float
 	return x_normalized
 
@@ -84,7 +82,6 @@ def objective_function(x, abaqus_script='Abaqus_Fork_Script.py', post_script='Ab
 	max_strain_normalized:    FLOAT
 
 	"""
-
 	# results = pickle.load(open('optimized_skin_thickness.pkl','rb'))
 
 	## Normalize input variables [cm]
@@ -107,7 +104,7 @@ def objective_function(x, abaqus_script='Abaqus_Fork_Script.py', post_script='Ab
 	command_file = r'abaqus cae nogui=' + abaqus_script
 	ps = sp.Popen(command_file, shell=True) ## Define the script name and command line for the terminal
 	ps.wait()
-	print "done waiting"
+	
 	## Run post script to get results
 	# print post_script
 	# command_file = r'abaqus cae nogui=' + post_script
@@ -118,7 +115,10 @@ def objective_function(x, abaqus_script='Abaqus_Fork_Script.py', post_script='Ab
 	with open('outputs.txt', 'r') as fileObj:
 		line = fileObj.readlines()[0]
 		score = float(line.split()[0])
-
+	
+	print score
+	print ('Run Completed') 
+	
 	return score
 
 def jac(x):
@@ -143,6 +143,8 @@ def jac(x):
 
     return U_prime
 
+with open('all_inputs.txt', 'w') as fileObj:
+	fileObj.write('')
 
 #----------------------------------------------------------
 # OPTIMIZATION INTERFACE
@@ -153,11 +155,11 @@ def jac(x):
 # T, T1, T2, L, h4, W3
 x0 = np.array([1.0, 0.0, 0.0, 0.0, 0.0, 0.0]) # [0.0, 1.0]
 
-run_U = objective_function(x0)
+#run_U = objective_function(x0)
 
-# final_sav = minimize(objective_function, x0, method='Nelder-Mead', \
-    # options={'disp':True}, tol=1e-4)
+final_sav = minimize(objective_function, x0, method='Nelder-Mead', 
+    options={'disp':True}, tol=1e-4)
 
-# ## Save the optimized skin thickness to a pickle file
-# with open('optimized_sav.pkl', 'wb') as fileObj:
-    # pickle.dump(final_sav, fileObj)
+## Save the optimized skin thickness to a pickle file
+with open('optimized_sav.pkl', 'wb') as fileObj:
+    pickle.dump(final_sav, fileObj)
