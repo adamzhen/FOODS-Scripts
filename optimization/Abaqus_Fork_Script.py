@@ -184,8 +184,9 @@ for loadn in range(1, 3): # Loads 1 and 2
 
 		# Seed Size
 		seedScale = 100 # number of elements that will fit across one diagonal of the fork handle
-		seedSize = 0.05 / 100 # sqrt( (((W4-W3)/2)**2) + (L3**2) ) / seedScale / 100 # calculating seed size and converting from cm to m
+		seedSize = 0.1 / 100 # sqrt( (((W4-W3)/2)**2) + (L3**2) ) / seedScale / 100 # calculating seed size and converting from cm to m
 		handleSeedSize = 0.01
+		localHandle = True
 		
 		ModelName = 'Model-%s' % (modelNum)
 		mdb.Model(name=ModelName, modelType=STANDARD_EXPLICIT)
@@ -605,13 +606,14 @@ for loadn in range(1, 3): # Loads 1 and 2
 		pickedCells = c.findAt((((Ws+Wt2)/2/100, (L3+l5)/100, (h5)/100), ))
 		d = p.datums
 		p.PartitionCellByDatumPlane(datumPlane=d[3], cells=pickedCells) # Partition tips of fork tines
-		p = mdb.models[ModelName].parts['Fork-m']
-		p.DatumPlaneByPrincipalPlane(principalPlane=XZPLANE, offset=(L3/100-handleSeedSize))
-		p = mdb.models[ModelName].parts['Fork-m']
-		c = p.cells
-		pickedCells = c.findAt(((0.0, L3/2/100, 0.0), ))
-		d = p.datums
-		p.PartitionCellByDatumPlane(datumPlane=d[5], cells=pickedCells) # Partition handle
+		if localHandle: # if seeding handle locally with larger seed sizes
+			p = mdb.models[ModelName].parts['Fork-m']
+			p.DatumPlaneByPrincipalPlane(principalPlane=XZPLANE, offset=(L3/100-handleSeedSize))
+			p = mdb.models[ModelName].parts['Fork-m']
+			c = p.cells
+			pickedCells = c.findAt(((0.0, L3/2/100, 0.0), ))
+			d = p.datums
+			p.PartitionCellByDatumPlane(datumPlane=d[5], cells=pickedCells) # Partition handle
 		p = mdb.models[ModelName].parts['Fork-m']
 		c = p.cells
 		pickedCells = c.findAt(((0.0, L3/2/100, 0.0), ))
@@ -665,10 +667,11 @@ for loadn in range(1, 3): # Loads 1 and 2
 			print 'Defining Loads'
 
 			# Load-1 (Vertical)
-			F1 = 5.0 # Newtons
-			Asurf1 = (L3 * (W3+W4) / 2) / (100**2) # Area of Surf-1 converted from cm^2 to m^2
+			F1 = 40.0 # Newtons
 			a = mdb.models[ModelName].rootAssembly
 			s1 = a.instances['Fork-m-1'].faces
+			surf2Face = s1.findAt((0, L3/2/100, 0))
+			Asurf1 = surf2Face.getSize()
 			side1Faces1 = s1.findAt(((0, L3/2/100, 0), ))
 			region = a.Surface(side1Faces=side1Faces1, name='Surf-1')
 			mdb.models[ModelName].SurfaceTraction(name=loadName, createStepName=stepName, 
@@ -892,17 +895,18 @@ for loadn in range(1, 3): # Loads 1 and 2
 		p = mdb.models[ModelName].parts['Fork-m']
 		p.seedPart(size=seedSize, deviationFactor=0.1, minSizeFactor=0.1)
 		# local seed handle
-		p = mdb.models[ModelName].parts['Fork-m']
-		e = p.edges
-		midHandleX = (W3 + (W4-W3)/2) / 2 # X-coordinate of handle edge whe Y = L3/2
-		lowHandleX = W3/2 + (W4-W3)/2 * (L3-T2)/L3 - T2 # X-coordinate of inner handle edge whe Y = T2
-		pickedEdges = e.findAt(((0,0,0), ), ((0,0,T/100), ), ((0,T2/100,T1/100), ), ((0,T2/100,T/100), ), 
-			((-W4/4/100,0,0), ), ((-W4/4/100,0,T/100), ), ((-W4/4/100,T2/100,T1/100), ), ((-W4/4/100,T2/100,T/100), ), 
-			((W4/2/100, 0, T/2/100), ), ((-W4/2/100, 0, T/2/100), ), ((lowHandleX/100, T2/100, T/2/100), ), ((-lowHandleX/100, T2/100, T/2/100), ), 
-			((midHandleX/100, L3/2/100, 0.0), ), ((-midHandleX/100, L3/2/100, 0.0), ), ((midHandleX/100, L3/2/100, T/100), ), ((-midHandleX/100, L3/2/100, T/100), ), 
-			(((midHandleX-T2)/100, L3/2/100, T1/100), ), ((-(midHandleX-T2)/100, L3/2/100, T1/100), ), (((midHandleX-T2)/100, L3/2/100, T/100), ), ((-(midHandleX-T2)/100, L3/2/100, T/100), )) 
-		p.seedEdgeBySize(edges=pickedEdges, size=handleSeedSize, deviationFactor=0.1, 
-			minSizeFactor=0.1, constraint=FINER)
+		if localHandle: # if seeding handle locally with larger seed sizes
+			p = mdb.models[ModelName].parts['Fork-m']
+			e = p.edges
+			midHandleX = (W3 + (W4-W3)/2) / 2 # X-coordinate of handle edge whe Y = L3/2
+			lowHandleX = W3/2 + (W4-W3)/2 * (L3-T2)/L3 - T2 # X-coordinate of inner handle edge whe Y = T2
+			pickedEdges = e.findAt(((0,0,0), ), ((0,0,T/100), ), ((0,T2/100,T1/100), ), ((0,T2/100,T/100), ), 
+				((-W4/4/100,0,0), ), ((-W4/4/100,0,T/100), ), ((-W4/4/100,T2/100,T1/100), ), ((-W4/4/100,T2/100,T/100), ), 
+				((W4/2/100, 0, T/2/100), ), ((-W4/2/100, 0, T/2/100), ), ((lowHandleX/100, T2/100, T/2/100), ), ((-lowHandleX/100, T2/100, T/2/100), ), 
+				((midHandleX/100, L3/2/100, 0.0), ), ((-midHandleX/100, L3/2/100, 0.0), ), ((midHandleX/100, L3/2/100, T/100), ), ((-midHandleX/100, L3/2/100, T/100), ), 
+				(((midHandleX-T2)/100, L3/2/100, T1/100), ), ((-(midHandleX-T2)/100, L3/2/100, T1/100), ), (((midHandleX-T2)/100, L3/2/100, T/100), ), ((-(midHandleX-T2)/100, L3/2/100, T/100), )) 
+			p.seedEdgeBySize(edges=pickedEdges, size=handleSeedSize, deviationFactor=0.1, 
+				minSizeFactor=0.1, constraint=FINER)
 		# mesh Fork-m
 		p = mdb.models[ModelName].parts['Fork-m']
 		p.generateMesh()

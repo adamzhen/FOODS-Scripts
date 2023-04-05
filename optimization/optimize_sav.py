@@ -157,9 +157,9 @@ x0 = np.array([1.0, 0.0, 0.0, 0.0, 0.0, 0.0]) # [0.0, 1.0]
 
 #run_U = objective_function(x0)
 
-final_sav = minimize(objective_function, x0, method='Nelder-Mead', 
+results = minimize(objective_function, x0, method='Nelder-Mead', 
     options={'disp':True}, tol=1e-4)
 
 ## Save the optimized skin thickness to a pickle file
 with open('optimized_sav.pkl', 'wb') as fileObj:
-    pickle.dump(final_sav, fileObj)
+    pickle.dump(results, fileObj)
