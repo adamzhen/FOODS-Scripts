@@ -591,6 +591,16 @@ for loadn in range(1, 3): # Loads 1 and 2
 		p = mdb.models[ModelName].Part(name='Fork-m', 
 			objectToCopy=mdb.models[ModelName].parts['Fork-cm'], 
 			compressFeatureList=ON, scale=0.01)
+		
+		# Fork-cm-SA
+		a = mdb.models[ModelName].rootAssembly
+		p = mdb.models[ModelName].parts['X-Support']
+		a.Instance(name='X-Support-1', part=p, dependent=ON)
+		a.translate(instanceList=('X-Support-1', ), vector=(0.0, 0.0, T1))
+		a = mdb.models[ModelName].rootAssembly
+		a.InstanceFromBooleanMerge(name='Fork-cm-SA', instances=(
+			a.instances['X-Support-1'], a.instances['Fork-cm-1'], ), 
+			originalInstances=DELETE, domain=GEOMETRY)
 
 		# Partitioning
 		p = mdb.models[ModelName].parts['Fork-m']
@@ -649,7 +659,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 		print 'Placing Parts in Space'
 		a = mdb.models[ModelName].rootAssembly
 		session.viewports['Viewport: 1'].setValues(displayedObject=a)
-		del a.features['Fork-cm-1'] # Deleting Fork-cm from assembly
+		del a.features['Fork-cm-SA-1'] # Deleting Fork-cm-SA from assembly
 		a1 = mdb.models[ModelName].rootAssembly
 		p = mdb.models[ModelName].parts['Fork-m']
 		a1.Instance(name='Fork-m-1', part=p, dependent=ON) # Adding Fork-m to assembly
@@ -748,7 +758,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 			# Create coupling constraints
 			a = mdb.models[ModelName].rootAssembly
 			r1 = a.referencePoints
-			refPoints1=(r1[39], )
+			refPoints1=(r1[43], )
 			region1=a.Set(referencePoints=refPoints1, name='m_Set-5')
 			a = mdb.models[ModelName].rootAssembly
 			v1 = a.instances['Fork-m-1'].vertices
@@ -759,7 +769,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 				localCsys=None, u1=ON, u2=ON, u3=ON, ur1=ON, ur2=ON, ur3=ON)
 			a = mdb.models[ModelName].rootAssembly
 			r1 = a.referencePoints
-			refPoints1=(r1[40], )
+			refPoints1=(r1[44], )
 			region1=a.Set(referencePoints=refPoints1, name='m_Set-6')
 			a = mdb.models[ModelName].rootAssembly
 			v1 = a.instances['Fork-m-1'].vertices
@@ -821,31 +831,6 @@ for loadn in range(1, 3): # Loads 1 and 2
 				coordinates=((W1-Wtip-flattip1)/2/100, L/100, (h7)/100)), rule=MIDDLE))
 			a = mdb.models[ModelName].rootAssembly
 			
-			# Create coupling constraints
-			# a = mdb.models[ModelName].rootAssembly
-			# r1 = a.referencePoints
-			# refPoints1=(r1[34], )
-			# region1=a.Set(referencePoints=refPoints1, name='m_Set-2')
-			# a = mdb.models[ModelName].rootAssembly
-			# v1 = a.instances['Fork-m-1'].vertices
-			# verts1 = v1.findAt((((Ws+Wt2-flattip2)/2/100, L/100, (h7)/100), ))
-			# region2=a.Set(vertices=verts1, name='s_Set-2')
-			# mdb.models[ModelName].Coupling(name='Constraint-2-1', controlPoint=region1, 
-				# surface=region2, influenceRadius=WHOLE_SURFACE, couplingType=KINEMATIC, 
-				# localCsys=None, u1=ON, u2=ON, u3=ON, ur1=ON, ur2=ON, ur3=ON)
-			
-			# a = mdb.models[ModelName].rootAssembly
-			# r1 = a.referencePoints
-			# refPoints1=(r1[35], )
-			# region1=a.Set(referencePoints=refPoints1, name='m_Set-4')
-			# a = mdb.models[ModelName].rootAssembly
-			# v1 = a.instances['Fork-m-1'].vertices
-			# verts1 = v1.findAt((((W1-Wtip-flattip1)/2/100, L/100, (h7)/100), ))
-			# region2=a.Set(vertices=verts1, name='s_Set-4')
-			# mdb.models[ModelName].Coupling(name='Constraint-2-2', controlPoint=region1, 
-				# surface=region2, influenceRadius=WHOLE_SURFACE, couplingType=KINEMATIC, 
-				# localCsys=None, u1=ON, u2=ON, u3=ON, ur1=ON, ur2=ON, ur3=ON)
-			
 			# Create tie constraints
 			a = mdb.models[ModelName].rootAssembly
 			v1 = a.instances['Fork-m-1'].vertices
@@ -853,7 +838,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 			region1=a.Set(vertices=verts1, name='m_Set-Node-1')
 			a = mdb.models[ModelName].rootAssembly
 			r1 = a.referencePoints
-			refPoints1=(r1[34], )
+			refPoints1=(r1[38], )
 			region2=a.Set(referencePoints=refPoints1, name='s_Set-Node-1')
 			mdb.models[ModelName].Tie(name='Tie-2-1', master=region1, slave=region2, 
 				positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
@@ -864,7 +849,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 			region1=a.Set(vertices=verts1, name='m_Set-Node-2')
 			a = mdb.models[ModelName].rootAssembly
 			r1 = a.referencePoints
-			refPoints1=(r1[35], )
+			refPoints1=(r1[39], )
 			region2=a.Set(referencePoints=refPoints1, name='s_Set-Node-2')
 			mdb.models[ModelName].Tie(name='Tie-2-2', master=region1, slave=region2, 
 				positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
@@ -960,9 +945,9 @@ for loadn in range(1, 3): # Loads 1 and 2
 		Un2 = results[4]
 
 		# Query Surface Area
-		p = mdb.models[ModelName].parts['Fork-cm']
+		p = mdb.models[ModelName].parts['Fork-cm-SA']
 		SA = p.getArea(p.faces)
-
+		
 		# Query Volume
 		a = mdb.models[ModelName].rootAssembly
 		prop = a.getMassProperties()
