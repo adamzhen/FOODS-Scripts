@@ -183,9 +183,8 @@ for loadn in range(1, 3): # Loads 1 and 2
 		rx = W3 * 0.2
 
 		# Seed Size
-		seedScale = 100 # number of elements that will fit across one diagonal of the fork handle
-		seedSize = 0.1 / 100 # sqrt( (((W4-W3)/2)**2) + (L3**2) ) / seedScale / 100 # calculating seed size and converting from cm to m
-		handleSeedSize = 0.01
+		seedSize = 0.0005 # sqrt( (((W4-W3)/2)**2) + (L3**2) ) / seedScale / 100 # calculating seed size and converting from cm to m
+		handleSeedSize = 0.002
 		localHandle = True
 		
 		ModelName = 'Model-%s' % (modelNum)
@@ -887,11 +886,15 @@ for loadn in range(1, 3): # Loads 1 and 2
 			lowHandleX = W3/2 + (W4-W3)/2 * (L3-T2)/L3 - T2 # X-coordinate of inner handle edge whe Y = T2
 			pickedEdges = e.findAt(((0,0,0), ), ((0,0,T/100), ), ((0,T2/100,T1/100), ), ((0,T2/100,T/100), ), 
 				((-W4/4/100,0,0), ), ((-W4/4/100,0,T/100), ), ((-W4/4/100,T2/100,T1/100), ), ((-W4/4/100,T2/100,T/100), ), 
-				((W4/2/100, 0, T/2/100), ), ((-W4/2/100, 0, T/2/100), ), ((lowHandleX/100, T2/100, T/2/100), ), ((-lowHandleX/100, T2/100, T/2/100), ), 
-				((midHandleX/100, L3/2/100, 0.0), ), ((-midHandleX/100, L3/2/100, 0.0), ), ((midHandleX/100, L3/2/100, T/100), ), ((-midHandleX/100, L3/2/100, T/100), ), 
-				(((midHandleX-T2)/100, L3/2/100, T1/100), ), ((-(midHandleX-T2)/100, L3/2/100, T1/100), ), (((midHandleX-T2)/100, L3/2/100, T/100), ), ((-(midHandleX-T2)/100, L3/2/100, T/100), )) 
+				((W4/2/100, 0, T/2/100), ), ((-W4/2/100, 0, T/2/100), ), ((lowHandleX/100, T2/100, T/2/100), ), ((-lowHandleX/100, T2/100, T/2/100), ))
 			p.seedEdgeBySize(edges=pickedEdges, size=handleSeedSize, deviationFactor=0.1, 
 				minSizeFactor=0.1, constraint=FINER)
+			p = mdb.models[ModelName].parts['Fork-m']
+			e = p.edges 
+			pickedEdges1 = e.findAt(((midHandleX/100, L3/2/100, T/100), ), ((-midHandleX/100, L3/2/100, T/100), ), (((midHandleX-T2)/100, L3/2/100, T/100), ), ((-(midHandleX-T2)/100, L3/2/100, T/100), ))
+			pickedEdges2 = e.findAt(((midHandleX/100, L3/2/100, 0.0), ), ((-midHandleX/100, L3/2/100, 0.0), ), (((midHandleX-T2)/100, L3/2/100, T1/100), ), ((-(midHandleX-T2)/100, L3/2/100, T1/100), ))
+			p.seedEdgeByBias(biasMethod=SINGLE, end1Edges=pickedEdges1, 
+				end2Edges=pickedEdges2, minSize=seedSize, maxSize=handleSeedSize, constraint=FINER)
 		# mesh Fork-m
 		p = mdb.models[ModelName].parts['Fork-m']
 		p.generateMesh()
