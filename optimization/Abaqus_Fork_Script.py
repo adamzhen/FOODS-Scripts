@@ -406,10 +406,32 @@ for loadn in range(1, 3): # Loads 1 and 2
 		p = mdb.models[ModelName].Part(name='Cut-2-2', dimensionality=THREE_D, 
 			type=DEFORMABLE_BODY)
 		p = mdb.models[ModelName].parts['Cut-2-2']
-		p.BaseSolidExtrude(sketch=s1, depth=(W1-Wtip)/2)
+		p.BaseSolidExtrude(sketch=s1, depth=(W1)/2+1) # +1 is to create extra depth that will later be mostly cut to properly cut fork while keeping a tip buffer
 		s1.unsetPrimaryObject()
 		p = mdb.models[ModelName].parts['Cut-2-2']
 		session.viewports['Viewport: 1'].setValues(displayedObject=p)
+		del mdb.models[ModelName].sketches['__profile__']
+		# Extrude Cut (cut to correct while leaving a small sliver for tip buffer)
+		tipBuffer = Wtip # cuts off inner tine ridges a certain distance before the tip, to allow for more accurate meshing
+		p = mdb.models[ModelName].parts['Cut-2-2']
+		f1, e1 = p.faces, p.edges
+		t = p.MakeSketchTransform(sketchPlane=f1.findAt(coordinates=(-(L-Wtip), 
+			h6, 0.0)), sketchUpEdge=e1.findAt(coordinates=(-L3-L2, h4*3/2, 0.0)), 
+			sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
+		s = mdb.models[ModelName].ConstrainedSketch(name='__profile__', sheetSize=28.4, 
+			gridSpacing=0.71, transform=t)
+		g, v, d, c = s.geometry, s.vertices, s.dimensions, s.constraints
+		s.setPrimaryObject(option=SUPERIMPOSE)
+		p = mdb.models[ModelName].parts['Cut-2-2']
+		p.projectReferencesOntoSketch(sketch=s, filter=COPLANAR_EDGES)
+		s.rectangle(point1=(L3+L2, h4*2), point2=(L-tipBuffer, h7))
+		p = mdb.models[ModelName].parts['Cut-2-2']
+		f, e = p.faces, p.edges
+		p.CutExtrude(sketchPlane=f.findAt(coordinates=(-(L-Wtip), h6, 0.0)), 
+			sketchUpEdge=e.findAt(coordinates=(-L3-L2, h4*3/2, 0.0)), 
+			sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s, depth=1.0, 
+			flipExtrudeDirection=OFF)
+		s.unsetPrimaryObject()
 		del mdb.models[ModelName].sketches['__profile__']
 
 		# Cut-2-3
@@ -429,7 +451,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 			axisDirection=(0.0, 1.0, 0.0), angle=-90.0)
 		#: The instance Cut-2-2-1 was rotated by -90. degrees about the axis defined by the point 0., 0., 0. and the vector 0., 1., 0.
 		a1 = mdb.models[ModelName].rootAssembly
-		a1.translate(instanceList=('Cut-2-2-1', ), vector=((W1-Wtip)/2, 0.0, 0.0))
+		a1.translate(instanceList=('Cut-2-2-1', ), vector=((W1)/2+1, 0.0, 0.0)) # corresponds to depth of Cut-2-2 extrude
 		a1 = mdb.models[ModelName].rootAssembly
 		# Merging Cut-2-1 and Cut-2-2
 		a1.InstanceFromBooleanMerge(name='Cut-2-3', instances=(
@@ -448,7 +470,6 @@ for loadn in range(1, 3): # Loads 1 and 2
 		p = mdb.models[ModelName].parts['Cut-2-3']
 		p.projectReferencesOntoSketch(sketch=s, filter=COPLANAR_EDGES)
 		tineY = (Ws+Wt2)/2 + T2
-		tipBuffer = Wtip # cuts off inner tine ridges a certain distance before the tip, to allow for more accurate meshing
 		s.Line(point1=(L-tipBuffer, -tineY - T3/2), point2=(L-tipBuffer, -tineY + T3/2))
 		s.Line(point1=(L-tipBuffer, -tineY + T3/2), point2=(L-L1, -tineY + T3/2))
 		s.Line(point1=(L-L1, -tineY + T3/2), point2=(L-L1, -tineY - T3/2))
@@ -461,6 +482,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 			flipExtrudeDirection=OFF)
 		s.unsetPrimaryObject()
 		del mdb.models[ModelName].sketches['__profile__']
+		
 
 		# X-Support
 		cy = L4+Lx/2 # y-coordinate of circle center
@@ -615,14 +637,14 @@ for loadn in range(1, 3): # Loads 1 and 2
 		pickedCells = c.findAt((((Ws+Wt2)/2/100, (L3+l5)/100, (h5)/100), ))
 		d = p.datums
 		p.PartitionCellByDatumPlane(datumPlane=d[3], cells=pickedCells) # Partition tips of fork tines
-		if localHandle: # if seeding handle locally with larger seed sizes
-			p = mdb.models[ModelName].parts['Fork-m']
-			p.DatumPlaneByPrincipalPlane(principalPlane=XZPLANE, offset=(L3/100-handleSeedSize))
-			p = mdb.models[ModelName].parts['Fork-m']
-			c = p.cells
-			pickedCells = c.findAt(((0.0, L3/2/100, 0.0), ))
-			d = p.datums
-			p.PartitionCellByDatumPlane(datumPlane=d[5], cells=pickedCells) # Partition handle
+		# if localHandle: # if seeding handle locally with larger seed sizes
+			# p = mdb.models[ModelName].parts['Fork-m']
+			# p.DatumPlaneByPrincipalPlane(principalPlane=XZPLANE, offset=(L3/100-handleSeedSize))
+			# p = mdb.models[ModelName].parts['Fork-m']
+			# c = p.cells
+			# pickedCells = c.findAt(((0.0, L3/2/100, 0.0), ))
+			# d = p.datums
+			# p.PartitionCellByDatumPlane(datumPlane=d[5], cells=pickedCells) # Partition handle
 		p = mdb.models[ModelName].parts['Fork-m']
 		c = p.cells
 		pickedCells = c.findAt(((0.0, L3/2/100, 0.0), ))
@@ -676,7 +698,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 			print 'Defining Loads'
 
 			# Load-1 (Vertical)
-			F1 = 40.0 # Newtons
+			F1 = 5.0 # Newtons
 			a = mdb.models[ModelName].rootAssembly
 			s1 = a.instances['Fork-m-1'].faces
 			surf2Face = s1.findAt((0, L3/2/100, 0))

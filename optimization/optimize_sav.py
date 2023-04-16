@@ -163,3 +163,4 @@ results = minimize(objective_function, x0, method='Nelder-Mead',
 ## Save the optimized skin thickness to a pickle file
 with open('optimized_sav.pkl', 'wb') as fileObj:
     pickle.dump(results, fileObj)
+
