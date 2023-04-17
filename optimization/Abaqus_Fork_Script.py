@@ -989,11 +989,14 @@ for loadn in range(1, 3): # Loads 1 and 2
 		# writing outputs for optimization
 		yield_stress = 60e6 # 60 MPa, Source: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6926899/
 		safety_factor = 1.1
+		score = 0
 		if S <= yield_stress/safety_factor and not failure:
 			score = -SA/V # this is negative in order to maximize using scipy minimize
 		else:
 			failure = True
-			score = 0
+			if score != 0:
+				score = 0
+			score += S / (yield_stress/safety_factor)
 		
 		with open('all_outputs.txt', 'a') as fileObj:
 			fileObj.write('%d, %1.3f, %1.3f, %1.1f, %1.3f, %1.4f, %1.3f, %1.3f\n' % (loadn, score, SA/V, S/1000000, U*100, E, Un1*100, Un2*100)) 
