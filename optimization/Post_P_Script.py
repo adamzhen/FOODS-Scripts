@@ -102,23 +102,23 @@ def getResults(ModelName, stepName, loadn):
 						maxVMElem = stressValue.elementLabel
 						maxStep = step.name
 						maxFrame = frame.incrementNumber
-			if (allFields.has_key(Displacement)):
-				#print 'Scanning for maximum displacement magnitude'
-				isDisplacementPresent = 1
-				dispSet = allFields[Displacement]  
-				dispValues = []
-				# print("Displacement present")
-				for dispValue in dispSet.values: 
-					if (dispValue.magnitude > maxDisp):
-						maxDisp = dispValue.magnitude
-			if (allFields.has_key(Strain)):
-				#print 'Scanning for maximum strain'
-				isStrainPresent = 1
-				strainSet = allFields[Strain]  
-				strainValues = []
-				for strainValue in strainSet.values:
-					if (strainValue.maxPrincipal > maxStrain):
-						maxStrain = strainValue.maxPrincipal		
+			# if (allFields.has_key(Displacement)):
+				# #print 'Scanning for maximum displacement magnitude'
+				# isDisplacementPresent = 1
+				# dispSet = allFields[Displacement]  
+				# dispValues = []
+				# # print("Displacement present")
+				# for dispValue in dispSet.values: 
+					# if (dispValue.magnitude > maxDisp):
+						# maxDisp = dispValue.magnitude
+			# if (allFields.has_key(Strain)):
+				# #print 'Scanning for maximum strain'
+				# isStrainPresent = 1
+				# strainSet = allFields[Strain]  
+				# strainValues = []
+				# for strainValue in strainSet.values:
+					# if (strainValue.maxPrincipal > maxStrain):
+						# maxStrain = strainValue.maxPrincipal		
 						
 	if(isStressPresent):
 		print 'Maximum von Mises stress %s is %f in element %d'%(

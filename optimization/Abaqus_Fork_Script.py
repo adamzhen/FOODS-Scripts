@@ -108,7 +108,7 @@ DataFile = open('PostData.txt','w')
 DataFile.write('Model, Load, ')
 for name in paramNames:
 	DataFile.write(name + ", ")
-DataFile.write('Treatment Combo, SAV (1/cm), Max Mises Stress (MPa), Max Displacement (cm), Max Strain, Node 1 Displacement (cm), Node 2 Displacement (cm)\n')
+DataFile.write('Treatment Combo, SAV (1/cm), Max Mises Stress (MPa), Node 1 Displacement (cm), Node 2 Displacement (cm)\n')
 DataFile.close()
 
 Mdb()
@@ -832,7 +832,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 			f1 = a.instances['Fork-m-1'].faces
 			faces1 = f1.findAt(((0.0, L3/2/100, 0.0), ))
 			region = a.Set(faces=faces1, name='Set-2-1')
-			mdb.models[ModelName].EncastreBC(name='BC-2-1', createStepName=stepName, 
+			mdb.models[ModelName].PinnedBC(name='BC-2-1', createStepName=stepName, 
 				region=region, localCsys=None)
 			
 			# Field Output Request for Model
@@ -999,7 +999,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 			score += S / (yield_stress/safety_factor)
 		
 		with open('all_outputs.txt', 'a') as fileObj:
-			fileObj.write('%d, %1.3f, %1.3f, %1.1f, %1.3f, %1.4f, %1.3f, %1.3f\n' % (loadn, score, SA/V, S/1000000, U*100, E, Un1*100, Un2*100)) 
+			fileObj.write('%d, %1.3f, %1.3f, %1.1f, %1.3f, %1.3f\n' % (loadn, score, SA/V, S/1000000, Un1*100, Un2*100)) 
 		
 	modelNum += 1
 
