@@ -637,9 +637,10 @@ for loadn in range(1, 3): # Loads 1 and 2
 		pickedCells = c.findAt((((Ws+Wt2)/2/100, (L3+l5)/100, (h5)/100), ))
 		d = p.datums
 		p.PartitionCellByDatumPlane(datumPlane=d[3], cells=pickedCells) # Partition tips of fork tines
+		seedBuffer = handleSeedSize*4
 		# if localHandle: # if seeding handle locally with larger seed sizes
 			# p = mdb.models[ModelName].parts['Fork-m']
-			# p.DatumPlaneByPrincipalPlane(principalPlane=XZPLANE, offset=(L3/100-handleSeedSize))
+			# p.DatumPlaneByPrincipalPlane(principalPlane=XZPLANE, offset=(L3/100-seedBuffer))
 			# p = mdb.models[ModelName].parts['Fork-m']
 			# c = p.cells
 			# pickedCells = c.findAt(((0.0, L3/2/100, 0.0), ))
@@ -694,6 +695,14 @@ for loadn in range(1, 3): # Loads 1 and 2
 				initialInc=0.1)
 			session.viewports['Viewport: 1'].assemblyDisplay.setValues(step=stepName)
 			
+			# Create Sets
+			a = mdb.models[ModelName].rootAssembly
+			c1 = a.instances['Fork-m-1'].cells
+			cells1 = c1.findAt(((0.0, (L3+L2)/100, h4/100), ), ((0.0, (L3/2)/100, 0.0), ), # Above neck & Main handle
+				((0.0, (L3-Lx/2)/100, (T1+Tx1)/100), )) # X-Support
+				# Handle Partition = ((0.0, L3/100-seedBuffer/2, 0.0), )
+			a.Set(cells=cells1,name='Without-Tips')
+		
 			#Define Loads
 			print 'Defining Loads'
 
@@ -701,8 +710,9 @@ for loadn in range(1, 3): # Loads 1 and 2
 			F1 = 5.0 # Newtons
 			a = mdb.models[ModelName].rootAssembly
 			s1 = a.instances['Fork-m-1'].faces
-			surf2Face = s1.findAt((0, L3/2/100, 0))
-			Asurf1 = surf2Face.getSize()
+			surfFace1 = s1.findAt((0, L3/2/100, 0))
+			#surfFace2 = s1.findAt((0.0, L3/100-seedBuffer/2, 0.0))
+			Asurf1 = surfFace1.getSize() # + surfFace2.getSize()
 			side1Faces1 = s1.findAt(((0, L3/2/100, 0), ))
 			region = a.Surface(side1Faces=side1Faces1, name='Surf-1')
 			mdb.models[ModelName].SurfaceTraction(name=loadName, createStepName=stepName, 
@@ -779,7 +789,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 			# Create coupling constraints
 			a = mdb.models[ModelName].rootAssembly
 			r1 = a.referencePoints
-			refPoints1=(r1[43], )
+			refPoints1=(r1[44], )
 			region1=a.Set(referencePoints=refPoints1, name='m_Set-5')
 			a = mdb.models[ModelName].rootAssembly
 			v1 = a.instances['Fork-m-1'].vertices
@@ -790,7 +800,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 				localCsys=None, u1=ON, u2=ON, u3=ON, ur1=ON, ur2=ON, ur3=ON)
 			a = mdb.models[ModelName].rootAssembly
 			r1 = a.referencePoints
-			refPoints1=(r1[44], )
+			refPoints1=(r1[45], )
 			region1=a.Set(referencePoints=refPoints1, name='m_Set-6')
 			a = mdb.models[ModelName].rootAssembly
 			v1 = a.instances['Fork-m-1'].vertices
@@ -830,9 +840,9 @@ for loadn in range(1, 3): # Loads 1 and 2
 			print 'Defining all BCs'
 			a = mdb.models[ModelName].rootAssembly
 			f1 = a.instances['Fork-m-1'].faces
-			faces1 = f1.findAt(((0.0, L3/2/100, 0.0), ))
+			faces1 = f1.findAt(((0.0, L3/2/100, 0), )) # (0.0, T2/2/100, T/100)
 			region = a.Set(faces=faces1, name='Set-2-1')
-			mdb.models[ModelName].PinnedBC(name='BC-2-1', createStepName=stepName, 
+			mdb.models[ModelName].ZsymmBC(name='BC-2-1', createStepName=stepName, 
 				region=region, localCsys=None)
 			
 			# Field Output Request for Model

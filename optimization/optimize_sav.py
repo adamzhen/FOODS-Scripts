@@ -98,7 +98,10 @@ def objective_function(x, abaqus_script='Abaqus_Fork_Script.py', post_script='Ab
 
 	with open('all_inputs.txt', 'a') as fileObj:
 		fileObj.write(strvars + '\n')
-
+	
+	with open('all_normalized_inputs.txt', 'a') as fileObj:
+		fileObj.write(','.join([str(v) for v in x]) + '\n')
+		
 	## Call Abaqus and wait for analysis to complete
 	print abaqus_script
 	command_file = r'abaqus cae nogui=' + abaqus_script
@@ -153,7 +156,7 @@ with open('all_inputs.txt', 'w') as fileObj:
 
 ## Initial total skin thickness guess
 # T, T1, T2, L, h4, W3
-x0 = np.array([1.0, 0.0, 0.0, 0.0, 0.0, 0.0]) # [0.0, 1.0]
+x0 = np.array([1.0, 0.0, 1.0, 0.0, 0.0, 0.0]) # [0.0, 1.0]
 
 #run_U = objective_function(x0)
 
