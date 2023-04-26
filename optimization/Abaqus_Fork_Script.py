@@ -105,15 +105,16 @@ for p in rangeParameters:
 # Open data file and write column headings
 DataFile = open('PostData.txt','w')
 #DataFile.write('%s\n\n' % (', '.join(paramNames)))
-DataFile.write('Model, Load, ')
+DataFile.write('Load, ')
 for name in paramNames:
 	DataFile.write(name + ", ")
-DataFile.write('Treatment Combo, SAV (1/cm), Max Mises Stress (MPa), Node 1 Displacement (cm), Node 2 Displacement (cm)\n')
+DataFile.write('SAV (1/cm), Max Mises Stress (MPa), Node 1 Displacement (cm), Node 2 Displacement (cm)\n')
 DataFile.close()
 
 Mdb()
 
 vars = meanParameters[:] # stores 0 for min and 1 for max values
+score = 0 # initializes score of objective function
 
 for loadn in range(1, 3): # Loads 1 and 2
 	with open('inputs.txt', 'r') as fileObj:
@@ -707,7 +708,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 			print 'Defining Loads'
 
 			# Load-1 (Vertical)
-			F1 = 5.0 # Newtons
+			F1 = 15.0 # Newtons
 			a = mdb.models[ModelName].rootAssembly
 			s1 = a.instances['Fork-m-1'].faces
 			surfFace1 = s1.findAt((0, L3/2/100, 0))
@@ -999,15 +1000,19 @@ for loadn in range(1, 3): # Loads 1 and 2
 		# writing outputs for optimization
 		yield_stress = 60e6 # 60 MPa, Source: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6926899/
 		safety_factor = 1.1
-		score = 0
-		if S <= yield_stress/safety_factor and not failure:
-			score = -SA/V # this is negative in order to maximize using scipy minimize
-		else:
-			failure = True
-			if score != 0:
-				score = 0
-			score += S / (yield_stress/safety_factor)
-		
+		stress_threshold = yield_stress / safety_factor
+		if loadn == 1:
+			if S <= stress_threshold: # load 1 success
+				score = -SA/V # this is negative in order to maximize using scipy minimize
+			else:
+				failure = True
+				score += S / stress_threshold
+		elif loadn == 2:
+			if S > yield_stress/safety_factor: # load 2 failure
+				if score < 0:
+					score = 0
+				score += S / stress_threshold
+				
 		with open('all_outputs.txt', 'a') as fileObj:
 			fileObj.write('%d, %1.3f, %1.3f, %1.1f, %1.3f, %1.3f\n' % (loadn, score, SA/V, S/1000000, Un1*100, Un2*100)) 
 		
