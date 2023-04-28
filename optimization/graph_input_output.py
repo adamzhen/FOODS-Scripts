@@ -3,7 +3,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-attempt = 3 # attempt number
+attempt = 4 # attempt number
 params = ["T", "T1", "T2", "L", "h4", "W3"]
 
 # read in data
@@ -34,6 +34,7 @@ plt.title(f'{yvar} vs Run No. (Attempt {attempt})')
 #plt.show()
 plt.savefig(f'optimization/attempt_{attempt}/{attempt}_{yvar.lower()}.png')
 plt.close()
+print(f'Attempt {attempt}, Best Score: {np.min(data[:, 1])}')
 
 # plot stress in scatter plot
 yvar = "Stress"
