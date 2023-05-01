@@ -153,14 +153,15 @@ with open('all_inputs.txt', 'w') as fileObj:
 # OPTIMIZATION INTERFACE
 #----------------------------------------------------------
 
-## Initial total skin thickness guess
+import itertools
+
 # T, T1, T2, L, h4, W3
-x0 = np.array([1, 0, 0, 0.2, 0.2, 0.2]) # [0.0, 1.0]
 
-results = minimize(objective_function, x0, method='Nelder-Mead', 
-    options={'disp':True}, tol=1e-4)
+# Generate all possible combinations of 0, 0.5, and 1
+input_values = list(itertools.product([0, 0.5, 1], repeat=6))
 
-## Save the optimized skin thickness to a pickle file
-with open('optimized_sav.pkl', 'wb') as fileObj:
-    pickle.dump(results, fileObj)
+# Normalize each parameter by dividing by the maximum value
+for values in input_values:
+	objective_function(np.array(values))
+
 

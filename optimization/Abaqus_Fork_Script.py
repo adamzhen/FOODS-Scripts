@@ -839,12 +839,24 @@ for loadn in range(1, 3): # Loads 1 and 2
 			
 			#Define BCs
 			print 'Defining all BCs'
+			# BC-2-1
 			a = mdb.models[ModelName].rootAssembly
 			f1 = a.instances['Fork-m-1'].faces
 			faces1 = f1.findAt(((0.0, L3/2/100, 0), )) # (0.0, T2/2/100, T/100)
 			region = a.Set(faces=faces1, name='Set-2-1')
-			mdb.models[ModelName].ZsymmBC(name='BC-2-1', createStepName=stepName, 
-				region=region, localCsys=None)
+			mdb.models[ModelName].DisplacementBC(name='BC-2-1', createStepName=stepName, 
+				region=region, u1=0.0, u2=UNSET, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET, 
+				amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='', 
+				localCsys=None)
+			# BC-2-2
+			a = mdb.models[ModelName].rootAssembly
+			f1 = a.instances['Fork-m-1'].faces
+			faces1 = f1.findAt(((0.0, 0.0, T/2/100), )) # (0.0, T2/2/100, T/100)
+			region = a.Set(faces=faces1, name='Set-2-2')
+			mdb.models[ModelName].DisplacementBC(name='BC-2-2', createStepName=stepName, 
+				region=region, u1=0.0, u2=0.0, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET, 
+				amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='', 
+				localCsys=None)
 			
 			# Field Output Request for Model
 			#Define Sets
@@ -870,7 +882,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 			region1=a.Set(vertices=verts1, name='m_Set-Node-1')
 			a = mdb.models[ModelName].rootAssembly
 			r1 = a.referencePoints
-			refPoints1=(r1[38], )
+			refPoints1=(r1[39], )
 			region2=a.Set(referencePoints=refPoints1, name='s_Set-Node-1')
 			mdb.models[ModelName].Tie(name='Tie-2-1', master=region1, slave=region2, 
 				positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
@@ -881,7 +893,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 			region1=a.Set(vertices=verts1, name='m_Set-Node-2')
 			a = mdb.models[ModelName].rootAssembly
 			r1 = a.referencePoints
-			refPoints1=(r1[39], )
+			refPoints1=(r1[40], )
 			region2=a.Set(referencePoints=refPoints1, name='s_Set-Node-2')
 			mdb.models[ModelName].Tie(name='Tie-2-2', master=region1, slave=region2, 
 				positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
