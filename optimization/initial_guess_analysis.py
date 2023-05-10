@@ -43,7 +43,7 @@ for i in range(len(data[:, 1])):
         inputs = indata[i, :]
         goodx.append(i)
         goodindata.append(inputs)
-        print(f'{i}: {inputs} = {score}')
+        print(f'{i}: {inputs} = {score}, {data[i, 3]}')
 
 # plot successful normalized inputs
 x = np.arange(1, len(indata)+1, 1)

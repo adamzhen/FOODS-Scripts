@@ -51,11 +51,11 @@ def normalize(x, bounds, inverse=False):
 	for i in range(len(x)):
 		## Normalize to [0,1]
 		if not inverse:
-			x_normalized[i] = (x[i] - bounds[0]) / domain
+			x_normalized[i] = round( (x[i] - bounds[0]) / domain,  5)
 
 		## Denormalize
 		else:
-			x_normalized[i] = domain[i] * x[i] + bounds[0, i]
+			x_normalized[i] = round( domain[i] * x[i] + bounds[0, i], 5)
 	
 	## If input was not an array, return a float
 	return x_normalized
@@ -102,6 +102,9 @@ def objective_function(x, abaqus_script='Abaqus_Fork_Script.py', post_script='Ab
 	with open('all_normalized_inputs.txt', 'a') as fileObj:
 		fileObj.write(','.join([str(v) for v in x]) + '\n')
 		
+	with open('all_run_data.txt', 'a') as fileObj:
+		fileObj.write(','.join([str(v) for v in x]) + ", ")
+		
 	## Call Abaqus and wait for analysis to complete
 	print abaqus_script
 	command_file = r'abaqus cae nogui=' + abaqus_script
@@ -116,8 +119,12 @@ def objective_function(x, abaqus_script='Abaqus_Fork_Script.py', post_script='Ab
 
 	## Read results file to get the maximum strain in the skin
 	with open('outputs.txt', 'r') as fileObj:
-		line = fileObj.readlines()[0]
+		lines = fileObj.readlines()
+		line = lines[0]
 		score = float(line.split()[0])
+		if len(lines) <= 1:
+			with open('all_run_data.txt', 'a') as fileObj:
+				fileObj.write('0\n')
 	
 	print score
 	print ('Run Completed') 
@@ -148,6 +155,12 @@ def jac(x):
 
 with open('all_inputs.txt', 'w') as fileObj:
 	fileObj.write('')
+with open('all_normalized_inputs.txt', 'w') as fileObj:
+	fileObj.write('')
+with open('all_outputs.txt', 'w') as fileObj:
+	fileObj.write('')
+with open('all_run_data.txt', 'w') as fileObj:
+	fileObj.write('')
 
 #----------------------------------------------------------
 # OPTIMIZATION INTERFACE
@@ -155,7 +168,7 @@ with open('all_inputs.txt', 'w') as fileObj:
 
 ## Initial total skin thickness guess
 # T, T1, T2, L, h4, W3
-x0 = np.array([1, 0, 0, 0.2, 0.2, 0.2]) # [0.0, 1.0]
+x0 = np.array([1, 0, 0, 0, 0.2, 0.2]) # [0.0, 1.0]
 
 results = minimize(objective_function, x0, method='Nelder-Mead', 
     options={'disp':True}, tol=1e-4)

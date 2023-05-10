@@ -80,6 +80,7 @@ session.journalOptions.setValues(replayGeometry=COORDINATE,recoverGeometry=COORD
 ### contents to be packaged into this single file.
 
 RUNJOB = True
+cutTips = False
 modelNum = 1
 #loadn = 1
 failure = False # represents if model has reach yield stress for either load 1 or 2
@@ -105,16 +106,15 @@ for p in rangeParameters:
 # Open data file and write column headings
 DataFile = open('PostData.txt','w')
 #DataFile.write('%s\n\n' % (', '.join(paramNames)))
-DataFile.write('Load, ')
+DataFile.write('Model, Load, ')
 for name in paramNames:
 	DataFile.write(name + ", ")
-DataFile.write('SAV (1/cm), Max Mises Stress (MPa), Node 1 Displacement (cm), Node 2 Displacement (cm)\n')
+DataFile.write('Treatment Combo, SAV (1/cm), Max Mises Stress (MPa), Node 1 Displacement (cm), Node 2 Displacement (cm)\n')
 DataFile.close()
 
 Mdb()
 
 vars = meanParameters[:] # stores 0 for min and 1 for max values
-score = 0 # initializes score of objective function
 
 for loadn in range(1, 3): # Loads 1 and 2
 	with open('inputs.txt', 'r') as fileObj:
@@ -126,65 +126,65 @@ for loadn in range(1, 3): # Loads 1 and 2
 		print varValues
 			
 		# Top View
-		L = varValues[3] # TOTAL LENGTH (cm)
-		L1 = 0.38 * L
-		L11 = 0.53 * L1 #Length from root to point
-		L2 = 0.75 * (L1-L11)
+		L = 18.1 # TOTAL LENGTH (cm)
+		L1 = 7.32
+		L11 = 3.63 #Length from root to point
+		L2 = (L1-L11)
 		L12 = L1 - L11 - L2
 		L3 = L - L1
 
-		W = 2.5 # MAXIMUM WIDTH (cm)
-		W1 = 0.83 * W
-		Wtip = 0.04 * W
+		W = 2.71 # MAXIMUM WIDTH (cm)
+		W1 = 2.1
+		Wtip = 0.14
 		W12 = L11/(L11+L12) * (W-W1) + W1
-		Wt1 = 0.16 * W12 # 2 outer tines
-		Wt2 = 0.16 * W12 # 2 inner tines
+		Wt1 = 0.54 # 2 outer tines
+		Wt2 = 0.46 # 2 inner tines
 		Ws = (W12 - 2*Wt1 - 2*Wt2) / 3 # 3 slots
-		W3 = varValues[5] * W
-		W4 = 0.35 * W
+		W3 = 0.78
+		W4 = 1.3
 		W21 = 0.94 * (W-W3) + W3
 		l21 = 0.85 * L2
 		W22 = 0.56 * (W-W3) + W3
 		l22 = 0.65 * L2
-		W23 = 0.05 * (W-W3) + W3
+		W23 = 0.04 * (W-W3) + W3
 		l23 = 0.3 * L2
 		fr1 = Wtip / 3
 		fr2 = Ws / 2
 
 		# Side View 
 
-		T = varValues[0] # MAXIMUM THICKNESS (cm)
-		T1 = T * varValues[1]
+		T = 0.45 # MAXIMUM THICKNESS (cm)
+		T1 = 0.15
 
 		l4 = L2
-		h4 = varValues[4] # heights expressed in terms of h4, since it's the max height
-		h7 = 0.3 * h4 # height of tine tip from plane
+		h4 = 1.37 # heights expressed in terms of h4, since it's the max height
+		h7 = 0.33 # height of tine tip from plane
 		l1 = 0.27 * l4
 		h1 = 0.1 * h4
-		l2 = 0.54 * l4
+		l2 = 0.52 * l4
 		h2 = 0.45 * h4
-		l3 = 0.75 * l4
+		l3 = 0.72 * l4
 		h3 = 0.95 * h4
 		l5 = L1 - (L11+L12)/2
 		h5 = (h4 + h7) * 0.55
 		l6 = l5 + L11/100
-		h6 = h5 + (T + T1) * 0.5
+		h6 = h5 + (T + T1) * 0.58
 
 		# Bottom View
 
-		T2 = T * varValues[2]
-		T3 = T2 # T * vars[10]
+		T2 = 0.15
+		T3 = 0.15
 
 		# X Support
 
-		Lx = 0.1 * L3
+		Lx = 1.0
 		L4 = L3 - Lx
-		Tx1 = T * 0.5
-		Tx2 = T * 0.3
-		rx = W3 * 0.2
+		Tx1 = T * 0.2
+		Tx2 = T * 0.4
+		rx = 0.12
 
 		# Seed Size
-		seedSize = 0.0005 # sqrt( (((W4-W3)/2)**2) + (L3**2) ) / seedScale / 100 # calculating seed size and converting from cm to m
+		seedSize = 0.001 # sqrt( (((W4-W3)/2)**2) + (L3**2) ) / seedScale / 100 # calculating seed size and converting from cm to m
 		handleSeedSize = 0.002
 		localHandle = True
 		
@@ -413,7 +413,10 @@ for loadn in range(1, 3): # Loads 1 and 2
 		session.viewports['Viewport: 1'].setValues(displayedObject=p)
 		del mdb.models[ModelName].sketches['__profile__']
 		# Extrude Cut (cut to correct while leaving a small sliver for tip buffer)
-		tipBuffer = Wtip # cuts off inner tine ridges a certain distance before the tip, to allow for more accurate meshing
+		if cutTips:
+			tipBuffer = Wtip # cuts off inner tine ridges a certain distance before the tip, to allow for more accurate meshing
+		else:
+			tipBuffer = 0
 		p = mdb.models[ModelName].parts['Cut-2-2']
 		f1, e1 = p.faces, p.edges
 		t = p.MakeSketchTransform(sketchPlane=f1.findAt(coordinates=(-(L-Wtip), 
@@ -633,11 +636,12 @@ for loadn in range(1, 3): # Loads 1 and 2
 			point3=(W3/2/100, L3/100, T), cells=pickedCells) # Partition handle from part above neck
 		p = mdb.models[ModelName].parts['Fork-m']
 		p.DatumPlaneByPrincipalPlane(principalPlane=XZPLANE, offset=(L-tipBuffer)/100)
-		p = mdb.models[ModelName].parts['Fork-m']
-		c = p.cells
-		pickedCells = c.findAt((((Ws+Wt2)/2/100, (L3+l5)/100, (h5)/100), ))
-		d = p.datums
-		p.PartitionCellByDatumPlane(datumPlane=d[3], cells=pickedCells) # Partition tips of fork tines
+		if cutTips:
+			p = mdb.models[ModelName].parts['Fork-m']
+			c = p.cells
+			pickedCells = c.findAt((((Ws+Wt2)/2/100, (L3+l5)/100, (h5)/100), ))
+			d = p.datums
+			p.PartitionCellByDatumPlane(datumPlane=d[3], cells=pickedCells) # Partition tips of fork tines
 		seedBuffer = handleSeedSize*4
 		# if localHandle: # if seeding handle locally with larger seed sizes
 			# p = mdb.models[ModelName].parts['Fork-m']
@@ -839,24 +843,12 @@ for loadn in range(1, 3): # Loads 1 and 2
 			
 			#Define BCs
 			print 'Defining all BCs'
-			# BC-2-1
 			a = mdb.models[ModelName].rootAssembly
 			f1 = a.instances['Fork-m-1'].faces
 			faces1 = f1.findAt(((0.0, L3/2/100, 0), )) # (0.0, T2/2/100, T/100)
 			region = a.Set(faces=faces1, name='Set-2-1')
-			mdb.models[ModelName].DisplacementBC(name='BC-2-1', createStepName=stepName, 
-				region=region, u1=0.0, u2=UNSET, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET, 
-				amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='', 
-				localCsys=None)
-			# BC-2-2
-			a = mdb.models[ModelName].rootAssembly
-			f1 = a.instances['Fork-m-1'].faces
-			faces1 = f1.findAt(((0.0, 0.0, T/2/100), )) # (0.0, T2/2/100, T/100)
-			region = a.Set(faces=faces1, name='Set-2-2')
-			mdb.models[ModelName].DisplacementBC(name='BC-2-2', createStepName=stepName, 
-				region=region, u1=0.0, u2=0.0, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET, 
-				amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='', 
-				localCsys=None)
+			mdb.models[ModelName].ZsymmBC(name='BC-2-1', createStepName=stepName, 
+				region=region, localCsys=None)
 			
 			# Field Output Request for Model
 			#Define Sets
@@ -882,7 +874,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 			region1=a.Set(vertices=verts1, name='m_Set-Node-1')
 			a = mdb.models[ModelName].rootAssembly
 			r1 = a.referencePoints
-			refPoints1=(r1[39], )
+			refPoints1=(r1[38], )
 			region2=a.Set(referencePoints=refPoints1, name='s_Set-Node-1')
 			mdb.models[ModelName].Tie(name='Tie-2-1', master=region1, slave=region2, 
 				positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
@@ -893,7 +885,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 			region1=a.Set(vertices=verts1, name='m_Set-Node-2')
 			a = mdb.models[ModelName].rootAssembly
 			r1 = a.referencePoints
-			refPoints1=(r1[40], )
+			refPoints1=(r1[39], )
 			region2=a.Set(referencePoints=refPoints1, name='s_Set-Node-2')
 			mdb.models[ModelName].Tie(name='Tie-2-2', master=region1, slave=region2, 
 				positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
@@ -966,7 +958,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 				userSubroutine='', 
 				scratch='', multiprocessingMode=DEFAULT, numCpus=4, numDomains=4)
 
-		job=mdb.jobs[ModelName]
+		#job=mdb.jobs[ModelName]
 
 		# delete lock file, which for some reason tends to hang around, if it exists
 		if os.access('%s.lck'%ModelName,os.F_OK):
@@ -1012,25 +1004,15 @@ for loadn in range(1, 3): # Loads 1 and 2
 		# writing outputs for optimization
 		yield_stress = 60e6 # 60 MPa, Source: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6926899/
 		safety_factor = 1.1
-		stress_threshold = yield_stress / safety_factor
-		success_ind = '' # represents if both loads get executed successfully
-		if loadn == 1:
-			if S <= stress_threshold: # load 1 success
-				score = -SA/V # this is negative in order to maximize using scipy minimize
-			else:
-				failure = True
-				score += S / stress_threshold
-			with open('all_run_data.txt', 'a') as fileObj:
-				fileObj.write('%1.3f, %1.1f, ' % (SA/V, S/1000000)) 
-		elif loadn == 2:
-			if S > yield_stress/safety_factor: # load 2 failure
-				if score < 0:
-					score = 0
-				score += S / stress_threshold
-			with open('all_run_data.txt', 'a') as fileObj:
-				fileObj.write('%1.3f, %1.1f, %1.3f \n' % (SA/V, S/1000000, score)) 
-			success_ind += '\n1'
-				
+		score = 0
+		if S <= yield_stress/safety_factor and not failure:
+			score = -SA/V # this is negative in order to maximize using scipy minimize
+		else:
+			failure = True
+			if score < 0:
+				score = 0
+			score += S / (yield_stress/safety_factor)
+		
 		with open('all_outputs.txt', 'a') as fileObj:
 			fileObj.write('%d, %1.3f, %1.3f, %1.1f, %1.3f, %1.3f\n' % (loadn, score, SA/V, S/1000000, Un1*100, Un2*100)) 
 		
@@ -1039,7 +1021,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 ###END LOOP (i.e., end indentation)
 
 with open('outputs.txt', 'w') as fileObj:
-	fileObj.write(str(score) + success_ind)
+	fileObj.write(str(score))
 
 		
 print 'DONE!!'

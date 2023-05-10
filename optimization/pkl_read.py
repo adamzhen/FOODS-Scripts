@@ -1,7 +1,8 @@
 import chardet
 import pickle
 
-pickle_file_name = 'optimization/optimized_sav.pkl'
+attempt = 5 # attempt number
+pickle_file_name = f'optimization/attempt_{attempt}/optimized_sav.pkl'
 
 with open(pickle_file_name, 'rb') as fileObj:
     #results = pickle.load(fileObj)

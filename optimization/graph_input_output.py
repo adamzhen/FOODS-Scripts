@@ -1,9 +1,7 @@
-# read in attempt_3/all_normalized_inputs.txt
-
 import numpy as np
 import matplotlib.pyplot as plt
 
-attempt = '4' # attempt number
+attempt = 5 # attempt number
 params = ["T", "T1", "T2", "L", "h4", "W3"]
 
 # read in data
