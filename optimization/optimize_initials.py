@@ -51,11 +51,11 @@ def normalize(x, bounds, inverse=False):
 	for i in range(len(x)):
 		## Normalize to [0,1]
 		if not inverse:
-			x_normalized[i] = (x[i] - bounds[0]) / domain
+			x_normalized[i] = round( (x[i] - bounds[0]) / domain,  5)
 
 		## Denormalize
 		else:
-			x_normalized[i] = domain[i] * x[i] + bounds[0, i]
+			x_normalized[i] = round( domain[i] * x[i] + bounds[0, i], 5)
 	
 	## If input was not an array, return a float
 	return x_normalized
@@ -101,7 +101,10 @@ def objective_function(x, abaqus_script='Abaqus_Fork_Script.py', post_script='Ab
 	
 	with open('all_normalized_inputs.txt', 'a') as fileObj:
 		fileObj.write(','.join([str(v) for v in x]) + '\n')
-	
+		
+	with open('all_run_data.txt', 'a') as fileObj:
+		fileObj.write(','.join([str(v) for v in x]) + ", ")
+		
 	## Call Abaqus and wait for analysis to complete
 	print abaqus_script
 	command_file = r'abaqus cae nogui=' + abaqus_script
@@ -114,11 +117,15 @@ def objective_function(x, abaqus_script='Abaqus_Fork_Script.py', post_script='Ab
 	# ps = sp.Popen(command_file, shell=True) ## Define the script name and command line for the terminal
 	# ps.wait()
 
-	## Read results file to get the maximum strain in the skin
+	## Read results file to get the score 
 	with open('outputs.txt', 'r') as fileObj:
-		line = fileObj.readlines()[0]
+		lines = fileObj.readlines()
+		line = lines[0]
 		score = float(line.split()[0])
-		
+		if len(lines) <= 1:
+			with open('all_run_data.txt', 'a') as fileObj:
+				fileObj.write('0\n')
+	
 	print score
 	print ('Run Completed') 
 	
@@ -148,33 +155,30 @@ def jac(x):
 
 with open('all_inputs.txt', 'w') as fileObj:
 	fileObj.write('')
+with open('all_normalized_inputs.txt', 'w') as fileObj:
+	fileObj.write('')
+with open('all_outputs.txt', 'w') as fileObj:
+	fileObj.write('')
+with open('all_run_data.txt', 'w') as fileObj:
+	fileObj.write('')
 
 #----------------------------------------------------------
 # OPTIMIZATION INTERFACE
 #----------------------------------------------------------
 
 import itertools
-
-with open('all_inputs.txt', 'w') as fileObj:
-	fileObj.write('')
-with open('all_normalized_inputs.txt', 'w') as fileObj:
-	fileObj.write('')
-with open('all_outputs.txt', 'w') as fileObj:
-	fileObj.write('')
 		
 # T, T1, T2, L, h4, W3
 
 # Full factorial: generate all 3^6 possible combinations of 0, 0.5, and 1
-# input_values = list(itertools.product([0, 0.5, 1], repeat=6))
+input_values = list(itertools.product([0, 0.5, 1], repeat=6))
+input_values = [input_values[-7], input_values[-4], input_values[-1]] # skipping all values where T is min
 
 # Using results from full factorial to explore specific subsets of parameters
-input_values = []
-for i in np.linspace(0,1,11):
-	for j in np.linspace(0,1,11):
-		input_values.append([1, 0, 0, 0, i, j])
-		
-#list(itertools.product([0.2, 0.4, 0.6, 0.8, 1], repeat=3))
-
+# input_values = []
+# for i in np.linspace(0,1,11):
+	# for j in np.linspace(0,1,11):
+		# input_values.append([1, 0, 0, 0, round(i, 1), round(j, 1)])
 
 # Normalize each parameter by dividing by the maximum value
 for values in input_values:

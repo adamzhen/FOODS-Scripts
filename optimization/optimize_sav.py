@@ -117,7 +117,7 @@ def objective_function(x, abaqus_script='Abaqus_Fork_Script.py', post_script='Ab
 	# ps = sp.Popen(command_file, shell=True) ## Define the script name and command line for the terminal
 	# ps.wait()
 
-	## Read results file to get the maximum strain in the skin
+	## Read results file to get the score 
 	with open('outputs.txt', 'r') as fileObj:
 		lines = fileObj.readlines()
 		line = lines[0]
@@ -166,14 +166,13 @@ with open('all_run_data.txt', 'w') as fileObj:
 # OPTIMIZATION INTERFACE
 #----------------------------------------------------------
 
-## Initial total skin thickness guess
 # T, T1, T2, L, h4, W3
-x0 = np.array([1, 0, 0, 0, 0.2, 0.2]) # [0.0, 1.0]
+x0 = np.array([1, 0, 0, 0.5, 0, 0.5]) # [0.0, 1.0]
 
 results = minimize(objective_function, x0, method='Nelder-Mead', 
     options={'disp':True}, tol=1e-4)
 
-## Save the optimized skin thickness to a pickle file
+## Save the optimized result to a pickle file
 with open('optimized_sav.pkl', 'wb') as fileObj:
     pickle.dump(results, fileObj)
 

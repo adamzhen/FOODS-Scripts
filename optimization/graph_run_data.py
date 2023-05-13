@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-attempt = 6 # attempt number
+attempt = 'i' # attempt number
 params = ["T", "T1", "T2", "L", "h4", "W3"]
 
 # read in data
@@ -15,8 +15,8 @@ for i in range(len(all_data)):
     if len(all_data[i]) == 11:
         good_data.append(all_data[i])
     else:
-        bad_runs.append(all_data[i])
         #print(i)
+        bad_runs.append(all_data[i])
 data = np.array(good_data)
 indata = data[:, 0:6]
 

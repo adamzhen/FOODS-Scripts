@@ -80,6 +80,7 @@ session.journalOptions.setValues(replayGeometry=COORDINATE,recoverGeometry=COORD
 ### contents to be packaged into this single file.
 
 RUNJOB = True
+cutTips = True
 modelNum = 1
 #loadn = 1
 failure = False # represents if model has reach yield stress for either load 1 or 2
@@ -184,7 +185,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 		rx = W3 * 0.2
 
 		# Seed Size
-		seedSize = 0.0005 # sqrt( (((W4-W3)/2)**2) + (L3**2) ) / seedScale / 100 # calculating seed size and converting from cm to m
+		seedSize = 0.001 # sqrt( (((W4-W3)/2)**2) + (L3**2) ) / seedScale / 100 # calculating seed size and converting from cm to m
 		handleSeedSize = 0.002
 		localHandle = True
 		
@@ -413,7 +414,10 @@ for loadn in range(1, 3): # Loads 1 and 2
 		session.viewports['Viewport: 1'].setValues(displayedObject=p)
 		del mdb.models[ModelName].sketches['__profile__']
 		# Extrude Cut (cut to correct while leaving a small sliver for tip buffer)
-		tipBuffer = Wtip # cuts off inner tine ridges a certain distance before the tip, to allow for more accurate meshing
+		if cutTips:
+			tipBuffer = 0
+		else:
+			tipBuffer = Wtip # cuts off inner tine ridges a certain distance before the tip, to allow for more accurate meshing
 		p = mdb.models[ModelName].parts['Cut-2-2']
 		f1, e1 = p.faces, p.edges
 		t = p.MakeSketchTransform(sketchPlane=f1.findAt(coordinates=(-(L-Wtip), 
@@ -633,11 +637,12 @@ for loadn in range(1, 3): # Loads 1 and 2
 			point3=(W3/2/100, L3/100, T), cells=pickedCells) # Partition handle from part above neck
 		p = mdb.models[ModelName].parts['Fork-m']
 		p.DatumPlaneByPrincipalPlane(principalPlane=XZPLANE, offset=(L-tipBuffer)/100)
-		p = mdb.models[ModelName].parts['Fork-m']
-		c = p.cells
-		pickedCells = c.findAt((((Ws+Wt2)/2/100, (L3+l5)/100, (h5)/100), ))
-		d = p.datums
-		p.PartitionCellByDatumPlane(datumPlane=d[3], cells=pickedCells) # Partition tips of fork tines
+		if cutTips:
+			p = mdb.models[ModelName].parts['Fork-m']
+			c = p.cells
+			pickedCells = c.findAt((((Ws+Wt2)/2/100, (L3+l5)/100, (h5)/100), ))
+			d = p.datums
+			p.PartitionCellByDatumPlane(datumPlane=d[3], cells=pickedCells) # Partition tips of fork tines
 		seedBuffer = handleSeedSize*4
 		# if localHandle: # if seeding handle locally with larger seed sizes
 			# p = mdb.models[ModelName].parts['Fork-m']
