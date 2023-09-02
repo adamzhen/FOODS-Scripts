@@ -65,6 +65,16 @@ def normalize(x, bounds, inverse=False):
 # OPTIMIZATION FUNCTIONS
 #----------------------------------------------------------
 
+# T, T1, T2, L, h4, W3
+var_bounds = np.array([[0.2, 0.1, 0.15, 14.0, 1.2, 0.2], [0.4, 0.4, 0.35, 18.0, 1.8, 0.4]])
+
+# Save var_bounds to metadata
+with open('all_metadata.txt', 'w') as fileObj:
+	fileObj.write('var_bounds\n')
+	fileObj.write('T,T1,T2,L,h4,W3\n')
+	fileObj.write(','.join([str(v) for v in var_bounds[0]]) + '\n')
+	fileObj.write(','.join([str(v) for v in var_bounds[1]]) + '\n')
+	
 def objective_function(x, abaqus_script='Abaqus_Fork_Script.py', post_script='Abaqus_Post_Processing.py'):
 	"""
 	Description
@@ -85,9 +95,6 @@ def objective_function(x, abaqus_script='Abaqus_Fork_Script.py', post_script='Ab
 	# results = pickle.load(open('optimized_skin_thickness.pkl','rb'))
 
 	## Normalize input variables [cm]
-	# T, T1, T2, L, h4, W3
-	var_bounds = np.array([[0.2, 0.1, 0.15, 12.0, 1.2, 0.2], [0.4, 0.4, 0.35, 18.0, 1.8, 0.4]])
-	#var_bounds = np.array([[0.2, 0.4], [0.1, 0.4], [0.15, 0.35], [14.0, 20.0], [1.2, 1.8], [0.2, 0.4]])
 	vars = normalize(x, bounds=var_bounds, inverse=True)
 	print vars
 
@@ -125,7 +132,7 @@ def objective_function(x, abaqus_script='Abaqus_Fork_Script.py', post_script='Ab
 		if len(lines) <= 1:
 			with open('all_run_data.txt', 'a') as fileObj:
 				fileObj.write('0\n')
-	
+
 	print score
 	print ('Run Completed') 
 	
@@ -161,18 +168,23 @@ with open('all_outputs.txt', 'w') as fileObj:
 	fileObj.write('')
 with open('all_run_data.txt', 'w') as fileObj:
 	fileObj.write('')
-
+	
 #----------------------------------------------------------
 # OPTIMIZATION INTERFACE
 #----------------------------------------------------------
 
 # T, T1, T2, L, h4, W3
-x0 = np.array([1, 0, 0, 0.5, 0, 0.5]) # [0.0, 1.0]
+x0 = np.array([1, 0, 0, 0.2, 0.2, 0.2]) # [0.0, 1.0]
 
 results = minimize(objective_function, x0, method='Nelder-Mead', 
     options={'disp':True}, tol=1e-4)
 
+		
 ## Save the optimized result to a pickle file
 with open('optimized_sav.pkl', 'wb') as fileObj:
     pickle.dump(results, fileObj)
-
+# Save fork_script_metadata to all_metadata
+with open('fork_script_metadata.txt', 'r') as fileObj:
+	fork_script_metadata = fileObj.read()
+with open('all_metadata.txt', 'a') as fileObj:
+	fileObj.write(fork_script_metadata)

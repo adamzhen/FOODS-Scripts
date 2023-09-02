@@ -1,7 +1,9 @@
+# Was used for attempts 3 and 4, before I started using the new data format (with all_run_data.txt)
+
 import numpy as np
 import matplotlib.pyplot as plt
 
-attempt = 5 # attempt number
+attempt = 4 # attempt number
 params = ["T", "T1", "T2", "L", "h4", "W3"]
 
 # read in data
@@ -45,9 +47,10 @@ plt.title(f'{yvar} vs Run No. (Attempt {attempt})')
 plt.savefig(f'optimization/attempt_{attempt}/{attempt}_{yvar.lower()}.png')
 plt.close()
 
+
 # find best scores
-# for i in range(len(data[:, 1])):
-#     score = data[i, 1]
-#     if score < -40:
-#         inputs = indata[i, :]
-#         print(f'{inputs} = {score}')
+for i in range(len(data[:, 1])):
+    score = data[i, 1]
+    if score < -43.36:
+        inputs = [x.round(3) for x in indata[i, :]] # round to 3 decimal places
+        print(f'{inputs} = {score}')

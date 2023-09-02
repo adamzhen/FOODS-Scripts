@@ -79,6 +79,7 @@ session.journalOptions.setValues(replayGeometry=COORDINATE,recoverGeometry=COORD
 ### Scripting the entire model allows its entire
 ### contents to be packaged into this single file.
 
+VERSION = 1.0
 RUNJOB = True
 cutTips = True
 modelNum = 1
@@ -415,9 +416,9 @@ for loadn in range(1, 3): # Loads 1 and 2
 		del mdb.models[ModelName].sketches['__profile__']
 		# Extrude Cut (cut to correct while leaving a small sliver for tip buffer)
 		if cutTips:
-			tipBuffer = 0
+			tipBuffer = Wtip
 		else:
-			tipBuffer = Wtip # cuts off inner tine ridges a certain distance before the tip, to allow for more accurate meshing
+			tipBuffer = 0 # partitions off inner tine ridges a certain distance before the tip, to allow for more accurate meshing
 		p = mdb.models[ModelName].parts['Cut-2-2']
 		f1, e1 = p.faces, p.edges
 		t = p.MakeSketchTransform(sketchPlane=f1.findAt(coordinates=(-(L-Wtip), 
@@ -1045,6 +1046,8 @@ for loadn in range(1, 3): # Loads 1 and 2
 
 with open('outputs.txt', 'w') as fileObj:
 	fileObj.write(str(score) + success_ind)
-
+with open('fork_script_metadata.txt', 'w') as fileObj:
+	fileObj.write('VERSION, yield_stress, safety_factor, stress_threshold\n')
+	fileObj.write('%1.1f, %1.1f, %1.2f, %1.3f \n\n' % (VERSION, yield_stress, safety_factor, stress_threshold)) 
 		
 print 'DONE!!'
