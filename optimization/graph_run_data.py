@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-attempt = '7' # attempt number
+attempt = '8' # attempt number
 params = ["T", "T1", "T2", "L", "h4", "W3"]
 
 # read in data
@@ -95,8 +95,22 @@ def normalize(x, bounds, inverse=False):
 	## If input was not an array, return a float
 	return x_normalized
 
-# T, T1, T2, L, h4, W3
-var_bounds = np.array([[0.2, 0.1, 0.15, 14.0, 1.2, 0.2], [0.4, 0.4, 0.35, 20.0, 1.8, 0.4]])
+# read in and print metadata
+print('\nMETADATA:')
+with open(f'optimization/attempt_{attempt}/all_metadata.txt', 'r') as f:
+    metadata = f.read().split('\n')
+    # var_bounds
+    var_bounds_ind = metadata.index('var_bounds') + 2
+    var_bounds = np.array([[float(x) for x in metadata[var_bounds_ind].split(',')], [float(x) for x in metadata[var_bounds_ind+1].split(',')]])
+    print(metadata[var_bounds_ind-1]) # parameter names
+    print(var_bounds) # parameter bounds (var_bounds)
+    # fork script metadata
+    fork_script_ind = metadata.index('fork_script') + 1
+    # create dictionary from 2 lists
+    fork_script_metadata = dict(zip([x.strip() for x in metadata[fork_script_ind].split(',')], [float(x) for x in metadata[fork_script_ind+1].split(',')]))
+    print(fork_script_metadata) # script version, yield stress, safety factor, stress threshold
+print()
+#var_bounds = np.array([[0.2, 0.1, 0.15, 14.0, 1.2, 0.2], [0.4, 0.4, 0.35, 20.0, 1.8, 0.4]])
 
 # find best scores
 for i in range(len(data[:, 1])):

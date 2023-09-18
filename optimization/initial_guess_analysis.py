@@ -61,7 +61,7 @@ goodx = []
 goodindata = []
 for i in range(len(data[:, 1])):
     score = data[i, -1]
-    if score < -30:
+    if score < -40:
         inputs = indata[i, :]
         goodx.append(i)
         goodindata.append(inputs)

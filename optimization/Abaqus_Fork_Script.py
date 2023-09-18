@@ -1047,6 +1047,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 with open('outputs.txt', 'w') as fileObj:
 	fileObj.write(str(score) + success_ind)
 with open('fork_script_metadata.txt', 'w') as fileObj:
+	fileObj.write('\nfork_script\n')
 	fileObj.write('VERSION, yield_stress, safety_factor, stress_threshold\n')
 	fileObj.write('%1.1f, %1.1f, %1.2f, %1.3f \n\n' % (VERSION, yield_stress, safety_factor, stress_threshold)) 
 		
