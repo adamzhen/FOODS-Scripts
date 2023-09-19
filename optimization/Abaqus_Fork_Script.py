@@ -85,24 +85,16 @@ cutTips = True
 modelNum = 1
 #loadn = 1
 failure = False # represents if model has reach yield stress for either load 1 or 2
-varParameters = []
-meanParameters = []
-rangeParameters = [ 	# Min, Max
-[0.2, 0.4], #T = 0.3 # MAXIMUM THICKNESS (cm)
-[0.1, 0.4], #T1 = T * 0.25 #Thickness of the overall surface
-[0.15, 0.35], #T2 = T * 0.3 #Thickness of outer ridges
-[14.0, 20.0], #L = 17.0 # TOTAL LENGTH (cm)
-[1.2, 1.8], #h4 = 1.5 # heights expressed in terms of h4, since it's the max height
-[0.2, 0.4], #W3 = 0.3 * W
-]
-alphabet = ['a','b','c','d','e','f','g','h','i'] # used for treatment combinations
-paramNames = ['T', 'T1', 'T2', 'L', 'h4', 'W3']
-nParams = len(paramNames) # number of parameters
-treatmentNames = alphabet[:nParams] # used for treatment combinations (i.e. d, ab, acde, etc.)
 
-for p in rangeParameters:
-	varParameters.append([p[0], (p[0]+p[1])/2, p[1]])
-	meanParameters.append((p[0]+p[1])/2)
+# rangeParameters = [ 	# Min, Max
+# [0.2, 0.4], #T = 0.3 # MAXIMUM THICKNESS (cm)
+# [0.1, 0.4], #T1 = T * 0.25 # Thickness of the overall surface
+# [0.15, 0.35], #T2 = T * 0.3 # Thickness of outer ridges
+# [14.0, 20.0], #L = 17.0 # TOTAL LENGTH (cm)
+# [1.2, 1.8], #h4 = 1.5 # heights expressed in terms of h4, since it's the max height
+# [0.2, 0.4], #W3 = 0.3 * W
+# ]
+paramNames = ['T', 'T1', 'T2', 'L', 'h4', 'W3']
 
 # Open data file and write column headings
 DataFile = open('PostData.txt','w')
@@ -115,7 +107,6 @@ DataFile.close()
 
 Mdb()
 
-vars = meanParameters[:] # stores 0 for min and 1 for max values
 score = 0 # initializes score of objective function
 
 for loadn in range(1, 3): # Loads 1 and 2

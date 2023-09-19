@@ -3,7 +3,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-attempt = 'i' # attempt number
+attempt = 'i1.0' # attempt number
 params = ["T", "T1", "T2", "L", "h4", "W3"]
 
 # read in data
@@ -61,7 +61,7 @@ goodx = []
 goodindata = []
 for i in range(len(data[:, 1])):
     score = data[i, -1]
-    if score < -40:
+    if score < -43:
         inputs = indata[i, :]
         goodx.append(i)
         goodindata.append(inputs)
@@ -69,15 +69,14 @@ for i in range(len(data[:, 1])):
 
 # plot successful normalized inputs
 x = np.arange(1, len(indata)+1, 1)
-plt.scatter(indata[:, 4], indata[:, 5], s=5, c='blue')
-plt.scatter(np.array(goodindata)[:, 4], np.array(goodindata)[:, 5], s=5, c='orange')
-plt.xlabel(params[4])
-plt.ylabel(params[5])
-plt.title(f'{params[5]} vs {params[4]}')
-#plt.show()
-plt.savefig(f'optimization/attempt_{attempt}/{params[5]}_vs_{params[4]}_inputs.png')
-plt.close()
-for i in range(0, len(params)):
+# plt.scatter(indata[:, 4], indata[:, 5], s=5, c='blue')
+# plt.scatter(np.array(goodindata)[:, 4], np.array(goodindata)[:, 5], s=5, c='orange')
+# plt.xlabel(params[4])
+# plt.ylabel(params[5])
+# plt.title(f'{params[5]} vs {params[4]}')
+# plt.savefig(f'optimization/attempt_{attempt}/{params[5]}_vs_{params[4]}_inputs.png')
+# plt.close()
+for i in range(0, len(params)): # plot input vs run no.
   plt.scatter(x, indata[:, i], s=5, c='blue')
   plt.scatter(goodx, np.array(goodindata)[:, i], s=5, c='orange')
   plt.xlabel('Run No.')
@@ -86,3 +85,32 @@ for i in range(0, len(params)):
   #plt.show()
   plt.savefig(f'optimization/attempt_{attempt}/{params[i]}_inputs.png')
   plt.close()
+inputvals = []
+avgscores = []
+# plot average score vs input value
+for p in range(0, len(params)): # for each parameter
+    for i in range(len(data[:, 1])): # for each run, find unique input values
+        if data[i, p] not in inputvals:
+            inputvals.append(data[i, p])
+    inputvals.sort()
+    for i in range(len(inputvals)): # for each unique input value, find average score
+        # only averages if the score is below 0
+        selectdata = []
+        for j in data[np.where(data[:, p] == inputvals[i]), -1][0]:
+            if j < 0: # only includes successful scores (score < 0)
+                selectdata.append(j)
+        avgscores.append(np.mean(np.array(selectdata)))
+    if (len(inputvals) != len(avgscores)):
+        print("ERROR: inputvals and avgscores not same length")
+    elif (len(inputvals) > 1): # plot if there is more than one input value
+        plt.plot(inputvals, avgscores, c='orange', linewidth=2)
+        plt.xlabel(params[p])
+        plt.ylabel('Average Successful Score')
+        plt.title(f'Average Successful Score vs {params[p]}', fontsize=14)
+        plt.xlim([0, 1])
+        #plt.show()
+        plt.savefig(f'optimization/attempt_{attempt}/avg_score_vs_{params[p]}.png')
+        plt.close()
+    inputvals = []
+    avgscores = []
+        

@@ -65,6 +65,16 @@ def normalize(x, bounds, inverse=False):
 # OPTIMIZATION FUNCTIONS
 #----------------------------------------------------------
 
+# T, T1, T2, L, h4, W3
+var_bounds = np.array([[0.2, 0.1, 0.15, 14.0, 1.2, 0.2], [0.4, 0.4, 0.35, 18.0, 1.8, 0.4]])
+
+# Save var_bounds to metadata
+with open('all_metadata.txt', 'w') as fileObj:
+	fileObj.write('var_bounds\n')
+	fileObj.write('T,T1,T2,L,h4,W3\n')
+	fileObj.write(','.join([str(v) for v in var_bounds[0]]) + '\n')
+	fileObj.write(','.join([str(v) for v in var_bounds[1]]) + '\n')
+	
 def objective_function(x, abaqus_script='Abaqus_Fork_Script.py', post_script='Abaqus_Post_Processing.py'):
 	"""
 	Description
@@ -85,9 +95,6 @@ def objective_function(x, abaqus_script='Abaqus_Fork_Script.py', post_script='Ab
 	# results = pickle.load(open('optimized_skin_thickness.pkl','rb'))
 
 	## Normalize input variables [cm]
-	# T, T1, T2, L, h4, W3
-	var_bounds = np.array([[0.2, 0.1, 0.15, 12.0, 1.2, 0.2], [0.4, 0.4, 0.35, 18.0, 1.8, 0.4]])
-	#var_bounds = np.array([[0.2, 0.4], [0.1, 0.4], [0.15, 0.35], [14.0, 20.0], [1.2, 1.8], [0.2, 0.4]])
 	vars = normalize(x, bounds=var_bounds, inverse=True)
 	print vars
 
@@ -171,17 +178,21 @@ import itertools
 # T, T1, T2, L, h4, W3
 
 # Full factorial: generate all 3^6 possible combinations of 0, 0.5, and 1
-input_values = list(itertools.product([0, 0.5, 1], repeat=6))
-input_values = [input_values[-7], input_values[-4], input_values[-1]] # skipping all values where T is min
+# input_values = list(itertools.product([0, 0.5, 1], repeat=6))
 
 # Using results from full factorial to explore specific subsets of parameters
-# input_values = []
-# for i in np.linspace(0,1,11):
-	# for j in np.linspace(0,1,11):
-		# input_values.append([1, 0, 0, 0, round(i, 1), round(j, 1)])
+input_values = []
+for L in np.linspace(0,1,6):
+	for h4 in np.linspace(0,1,6):
+		for W3 in np.linspace(0,1,6):
+			input_values.append([1, 0, 0, round(L, 1), round(h4, 1), round(W3, 1)])
 
 # Normalize each parameter by dividing by the maximum value
 for values in input_values:
 	objective_function(np.array(values))
 
-
+# Save fork_script_metadata to all_metadata
+with open('fork_script_metadata.txt', 'r') as fileObj:
+	fork_script_metadata = fileObj.read()
+with open('all_metadata.txt', 'a') as fileObj:
+	fileObj.write(fork_script_metadata)

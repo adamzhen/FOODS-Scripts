@@ -127,21 +127,21 @@ for loadn in range(1, 3): # Loads 1 and 2
 			
 		# Top View
 		L = 18.1 # TOTAL LENGTH (cm)
-		L1 = 7.32
-		L11 = 3.63 #Length from root to point
-		L2 = (L1-L11)
+		L1 = 0.404 * L
+		L11 = 0.2 * L #Length from root to point
+		L2 = 0.78 * (L1-L11)
 		L12 = L1 - L11 - L2
 		L3 = L - L1
 
 		W = 2.71 # MAXIMUM WIDTH (cm)
-		W1 = 2.1
-		Wtip = 0.14
+		W1 = 0.775 * W
+		Wtip = 0.0517 * W
 		W12 = L11/(L11+L12) * (W-W1) + W1
-		Wt1 = 0.54 # 2 outer tines
-		Wt2 = 0.46 # 2 inner tines
+		Wt1 = 0.208 * W12 # 2 outer tines
+		Wt2 = 0.177 * W12 # 2 inner tines
 		Ws = (W12 - 2*Wt1 - 2*Wt2) / 3 # 3 slots
-		W3 = 0.78
-		W4 = 1.3
+		W3 = 0.288 * W
+		W4 = 0.48 * W
 		W21 = 0.94 * (W-W3) + W3
 		l21 = 0.85 * L2
 		W22 = 0.56 * (W-W3) + W3
@@ -154,11 +154,11 @@ for loadn in range(1, 3): # Loads 1 and 2
 		# Side View 
 
 		T = 0.45 # MAXIMUM THICKNESS (cm)
-		T1 = 0.15
+		T1 = 0.22 * T
 
 		l4 = L2
 		h4 = 1.37 # heights expressed in terms of h4, since it's the max height
-		h7 = 0.33 # height of tine tip from plane
+		h7 = 0.241 * h4 # height of tine tip from plane
 		l1 = 0.27 * l4
 		h1 = 0.1 * h4
 		l2 = 0.52 * l4
@@ -172,16 +172,16 @@ for loadn in range(1, 3): # Loads 1 and 2
 
 		# Bottom View
 
-		T2 = 0.15
-		T3 = 0.15
+		T2 = 0.333 * T
+		T3 = T2
 
 		# X Support
 
-		Lx = 1.0
+		Lx = 0.093 * L3
 		L4 = L3 - Lx
 		Tx1 = T * 0.2
 		Tx2 = T * 0.4
-		rx = 0.12
+		rx = 0.154 * W3
 
 		# Seed Size
 		seedSize = 0.001 # sqrt( (((W4-W3)/2)**2) + (L3**2) ) / seedScale / 100 # calculating seed size and converting from cm to m
@@ -958,7 +958,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 				userSubroutine='', 
 				scratch='', multiprocessingMode=DEFAULT, numCpus=4, numDomains=4)
 
-		#job=mdb.jobs[ModelName]
+		job=mdb.jobs[ModelName]
 
 		# delete lock file, which for some reason tends to hang around, if it exists
 		if os.access('%s.lck'%ModelName,os.F_OK):
