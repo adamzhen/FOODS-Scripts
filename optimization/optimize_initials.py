@@ -66,7 +66,7 @@ def normalize(x, bounds, inverse=False):
 #----------------------------------------------------------
 
 # T, T1, T2, L, h4, W3
-var_bounds = np.array([[0.2, 0.1, 0.15, 14.0, 1.2, 0.2], [0.4, 0.4, 0.35, 18.0, 1.8, 0.4]])
+var_bounds = np.array([[0.2, 0.02, 0.02, 13.0, 1.0, 0.1], [0.4, 0.1, 0.15, 17.0, 1.6, 0.3]])
 
 # Save var_bounds to metadata
 with open('all_metadata.txt', 'w') as fileObj:

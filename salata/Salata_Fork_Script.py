@@ -154,7 +154,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 		# Side View 
 
 		T = 0.45 # MAXIMUM THICKNESS (cm)
-		T1 = 0.22 * T
+		T1 = 0.1
 
 		l4 = L2
 		h4 = 1.37 # heights expressed in terms of h4, since it's the max height
@@ -172,16 +172,16 @@ for loadn in range(1, 3): # Loads 1 and 2
 
 		# Bottom View
 
-		T2 = 0.333 * T
+		T2 = 0.15
 		T3 = T2
 
 		# X Support
 
-		Lx = 0.093 * L3
+		Lx = 0.1 * L3
 		L4 = L3 - Lx
 		Tx1 = T * 0.2
 		Tx2 = T * 0.4
-		rx = 0.154 * W3
+		rx = 0.2 * W3
 
 		# Seed Size
 		seedSize = 0.001 # sqrt( (((W4-W3)/2)**2) + (L3**2) ) / seedScale / 100 # calculating seed size and converting from cm to m

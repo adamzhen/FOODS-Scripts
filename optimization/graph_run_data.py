@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-attempt = '8' # attempt number
+attempt = '2.0' # attempt number
 params = ["T", "T1", "T2", "L", "h4", "W3"]
 
 # read in data
@@ -113,9 +113,9 @@ print()
 #var_bounds = np.array([[0.2, 0.1, 0.15, 14.0, 1.2, 0.2], [0.4, 0.4, 0.35, 20.0, 1.8, 0.4]])
 
 # find best scores
-for i in range(len(data[:, 1])):
+for i in range(len(data[:, -1])):
     score = data[i, -1]
-    if score < -40:
+    if score < 1.21:
         inputs = [x.round(3) for x in normalize(indata[i, :], bounds=var_bounds, inverse=True)] # converts from normalized to actual & rounds to 3 decimal places
         print(f'{inputs} = {score}')
 
