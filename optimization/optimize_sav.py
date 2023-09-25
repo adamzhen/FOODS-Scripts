@@ -2,7 +2,7 @@ import subprocess as sp
 
 import pickle
 import numpy as np
-from scipy.optimize import minimize
+from scipy.optimize import minimize, Bounds
 
 """
 Updates to the Abaqus scripts:
@@ -51,11 +51,11 @@ def normalize(x, bounds, inverse=False):
 	for i in range(len(x)):
 		## Normalize to [0,1]
 		if not inverse:
-			x_normalized[i] = round( (x[i] - bounds[0]) / domain,  5)
+			x_normalized[i] = np.round( (x[i] - bounds[0, i]) / domain[i], 5) 
 
 		## Denormalize
 		else:
-			x_normalized[i] = round( domain[i] * x[i] + bounds[0, i], 5)
+			x_normalized[i] = np.round( domain[i] * x[i] + bounds[0, i], 5)
 	
 	## If input was not an array, return a float
 	return x_normalized
@@ -174,10 +174,13 @@ with open('all_run_data.txt', 'w') as fileObj:
 #----------------------------------------------------------
 
 # T, T1, T2, L, h4, W3
-x0 = np.array([1, 0.1, 0.1, 0.1, 0.1, 0.1]) # [0.0, 1.0]
+x0 = np.array([1.0, 0.25, 0.308, 0.25, 0.333, 0.5]) # [0.0, 1.0]
+
+# parameter bounds [min, max]
+bounds = Bounds([0.2, 0.02, 0.02, 13.0, 1.0, 0.1], [0.4, 0.1, 0.15, 17.0, 1.6, 0.3])
 
 results = minimize(objective_function, x0, method='Nelder-Mead', 
-    options={'disp':True}, tol=1e-4)
+    options={'disp':True}, tol=1e-4, bounds=bounds)
 
 		
 ## Save the optimized result to a pickle file

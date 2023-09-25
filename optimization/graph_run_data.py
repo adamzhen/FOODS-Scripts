@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-attempt = '2.0' # attempt number
+attempt = '2.1' # attempt number
 params = ["T", "T1", "T2", "L", "h4", "W3"]
 
 # read in data
@@ -87,10 +87,10 @@ def normalize(x, bounds, inverse=False):
 	for i in range(len(x)):
 		## Normalize to [0,1]
 		if not inverse:
-			x_normalized[i] = round( (x[i] - bounds[0]) / domain,  5)
+			x_normalized[i] = np.round( (x[i] - bounds[0, i]) / domain[i], 5) 
 		## Denormalize
 		else:
-			x_normalized[i] = round( domain[i] * x[i] + bounds[0, i], 5)
+			x_normalized[i] = np.round( domain[i] * x[i] + bounds[0, i], 5)
 
 	## If input was not an array, return a float
 	return x_normalized
@@ -115,8 +115,9 @@ print()
 # find best scores
 for i in range(len(data[:, -1])):
     score = data[i, -1]
-    if score < 1.21:
+    if score < -53:
         inputs = [x.round(3) for x in normalize(indata[i, :], bounds=var_bounds, inverse=True)] # converts from normalized to actual & rounds to 3 decimal places
         print(f'{inputs} = {score}')
 
-#print(normalize(np.array([0.984, 0.0, -0.0, 0.19, 0.208, 0.206]), bounds=var_bounds, inverse=True))
+# print(normalize(np.array([ 0.4,  0.04,   0.06,  14,  1.2, 0.2 ]), bounds=var_bounds, inverse=False))
+# print(normalize(np.array([1.0, 0.25, 0.308, 0.25, 0.333, 0.5]), bounds=var_bounds, inverse=True))

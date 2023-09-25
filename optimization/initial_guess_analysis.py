@@ -3,7 +3,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-attempt = 'i1.0' # attempt number
+attempt = 'i1.1' # attempt number
 params = ["T", "T1", "T2", "L", "h4", "W3"]
 
 # read in data

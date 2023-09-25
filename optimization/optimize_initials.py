@@ -51,11 +51,11 @@ def normalize(x, bounds, inverse=False):
 	for i in range(len(x)):
 		## Normalize to [0,1]
 		if not inverse:
-			x_normalized[i] = round( (x[i] - bounds[0]) / domain,  5)
+			x_normalized[i] = np.round( (x[i] - bounds[0, i]) / domain[i], 5) 
 
 		## Denormalize
 		else:
-			x_normalized[i] = round( domain[i] * x[i] + bounds[0, i], 5)
+			x_normalized[i] = np.round( domain[i] * x[i] + bounds[0, i], 5)
 	
 	## If input was not an array, return a float
 	return x_normalized

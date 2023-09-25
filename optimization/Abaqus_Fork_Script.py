@@ -80,20 +80,14 @@ session.journalOptions.setValues(replayGeometry=COORDINATE,recoverGeometry=COORD
 ### contents to be packaged into this single file.
 
 VERSION = 1.0
-RUNJOB = True
-cutTips = True
+RUNJOB = False
+cutTips = False
 modelNum = 1
 #loadn = 1
 failure = False # represents if model has reach yield stress for either load 1 or 2
 
-# rangeParameters = [ 	# Min, Max
-# [0.2, 0.4], #T = 0.3 # MAXIMUM THICKNESS (cm)
-# [0.1, 0.4], #T1 = T * 0.25 # Thickness of the overall surface
-# [0.15, 0.35], #T2 = T * 0.3 # Thickness of outer ridges
-# [14.0, 20.0], #L = 17.0 # TOTAL LENGTH (cm)
-# [1.2, 1.8], #h4 = 1.5 # heights expressed in terms of h4, since it's the max height
-# [0.2, 0.4], #W3 = 0.3 * W
-# ]
+F1 = 15.0 # Newtons
+F2 = 5.0 # Newtons
 paramNames = ['T', 'T1', 'T2', 'L', 'h4', 'W3']
 
 # Open data file and write column headings
@@ -705,7 +699,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 			print 'Defining Loads'
 
 			# Load-1 (Vertical)
-			F1 = 15.0 # Newtons
+			# F1 defined at start of program
 			a = mdb.models[ModelName].rootAssembly
 			s1 = a.instances['Fork-m-1'].faces
 			surfFace1 = s1.findAt((0, L3/2/100, 0))
@@ -824,7 +818,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 			side1Faces1 = s1.findAt((((Ws+Wt2)/2/100, (L3+l5)/100, (h5)/100), ))
 			region = a.Surface(side1Faces=side1Faces1, name='Surf-2')
 			# calculating area and pressure
-			F2 = 5.0 # Newtons
+			# F2 defined at start of program
 			surf2Face = s1.findAt(((Ws+Wt2)/2/100, (L3+l5)/100, (h5)/100))
 			Asurf2 = surf2Face.getSize()
 			mdb.models[ModelName].SurfaceTraction(name=loadName, createStepName=stepName, 
@@ -962,8 +956,8 @@ for loadn in range(1, 3): # Loads 1 and 2
 				modelPrint=OFF, contactPrint=OFF, historyPrint=OFF, 
 				userSubroutine='', 
 				scratch='', multiprocessingMode=DEFAULT, numCpus=4, numDomains=4)
-
-		job=mdb.jobs[ModelName]
+		if RUNJOB:
+			job=mdb.jobs[ModelName]
 
 		# delete lock file, which for some reason tends to hang around, if it exists
 		if os.access('%s.lck'%ModelName,os.F_OK):
@@ -1039,7 +1033,7 @@ with open('outputs.txt', 'w') as fileObj:
 	fileObj.write(str(score) + success_ind)
 with open('fork_script_metadata.txt', 'w') as fileObj:
 	fileObj.write('\nfork_script\n')
-	fileObj.write('VERSION, yield_stress, safety_factor, stress_threshold\n')
-	fileObj.write('%1.1f, %1.1f, %1.2f, %1.3f \n\n' % (VERSION, yield_stress, safety_factor, stress_threshold)) 
+	fileObj.write('VERSION, Yield_Stress_Pa, Safety_Factor, Stress_Threshold_Pa, Load1_N, Load2_N \n')
+	fileObj.write('%1.1f, %1.1f, %1.2f, %1.3f, %1.1f, %1.1f \n\n' % (VERSION, yield_stress, safety_factor, stress_threshold, F1, F2)) 
 		
 print 'DONE!!'
