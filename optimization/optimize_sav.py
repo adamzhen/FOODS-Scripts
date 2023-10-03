@@ -2,7 +2,7 @@ import subprocess as sp
 
 import pickle
 import numpy as np
-from scipy.optimize import minimize, Bounds
+from scipy.optimize import minimize, differential_evolution
 
 """
 Updates to the Abaqus scripts:
@@ -173,15 +173,16 @@ with open('all_run_data.txt', 'w') as fileObj:
 # OPTIMIZATION INTERFACE
 #----------------------------------------------------------
 
-# T, T1, T2, L, h4, W3
-x0 = np.array([1.0, 0.25, 0.308, 0.25, 0.333, 0.5]) # [0.0, 1.0]
-
+# initial guess
+x0 = np.array([1.0, 0, 0.3497, 0.268, 0.518, 0.507]) # T, T1, T2, L, h4, W3
 # parameter bounds [min, max]
-bounds = Bounds([0.2, 0.02, 0.02, 13.0, 1.0, 0.1], [0.4, 0.1, 0.15, 17.0, 1.6, 0.3])
+bounds = np.array([0.2, 0.4], [0.02, 0.1], [0.02, 0.15], [13.0, 17.0], [1.0, 1.6], [0.1, 0.3]])
 
-results = minimize(objective_function, x0, method='Nelder-Mead', 
-    options={'disp':True}, tol=1e-4, bounds=bounds)
-
+# scipy.minimize
+# results = minimize(objective_function, x0, method='Nelder-Mead', options={'disp':True}, tol=1e-4, bounds=bounds)
+	
+# scipy.differential_evolution
+results = differential_evolution(objective_function, bounds)
 		
 ## Save the optimized result to a pickle file
 with open('optimized_sav.pkl', 'wb') as fileObj:

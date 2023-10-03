@@ -79,9 +79,9 @@ session.journalOptions.setValues(replayGeometry=COORDINATE,recoverGeometry=COORD
 ### Scripting the entire model allows its entire
 ### contents to be packaged into this single file.
 
-VERSION = 1.0
-RUNJOB = False
-cutTips = False
+VERSION = 2.0
+RUNJOB = True
+cutTips = True
 modelNum = 1
 #loadn = 1
 failure = False # represents if model has reach yield stress for either load 1 or 2

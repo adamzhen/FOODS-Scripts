@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-attempt = '2.1' # attempt number
+attempt = '2.2' # attempt number
 params = ["T", "T1", "T2", "L", "h4", "W3"]
 
 # read in data
@@ -112,12 +112,29 @@ with open(f'optimization/attempt_{attempt}/all_metadata.txt', 'r') as f:
 print()
 #var_bounds = np.array([[0.2, 0.1, 0.15, 14.0, 1.2, 0.2], [0.4, 0.4, 0.35, 20.0, 1.8, 0.4]])
 
-# find best scores
+##### FIND BEST SCORES #####
+
+threshold = -49
+
+print(f'Inputs with score < {threshold}:')
+best_inputs_norm = []
 for i in range(len(data[:, -1])):
     score = data[i, -1]
-    if score < -53:
+    if score < threshold:
         inputs = [x.round(3) for x in normalize(indata[i, :], bounds=var_bounds, inverse=True)] # converts from normalized to actual & rounds to 3 decimal places
-        print(f'{inputs} = {score}')
+        best_inputs_norm.append([x.round(3) for x in indata[i, :]])
+        print(f'{inputs} => {score}')
+
+# plot best normalized input values vs parameter name
+best_inputs_norm = np.array(best_inputs_norm)
+x = np.arange(1, len(params)+1, 1)
+plt.plot(x, best_inputs_norm.T, 'go') # green dots
+plt.xlabel('Parameter')
+plt.ylabel('Normalized Input')
+plt.title(f'Normalized Inputs with score < {threshold} (Attempt {attempt})')
+plt.xticks(x, params)
+#plt.show()
+plt.savefig(f'optimization/attempt_{attempt}/{attempt}_best_norm_inputs.png')
 
 # print(normalize(np.array([ 0.4,  0.04,   0.06,  14,  1.2, 0.2 ]), bounds=var_bounds, inverse=False))
 # print(normalize(np.array([1.0, 0.25, 0.308, 0.25, 0.333, 0.5]), bounds=var_bounds, inverse=True))
