@@ -174,15 +174,16 @@ with open('all_run_data.txt', 'w') as fileObj:
 #----------------------------------------------------------
 
 # initial guess
-x0 = np.array([1.0, 0, 0.3497, 0.268, 0.518, 0.507]) # T, T1, T2, L, h4, W3
+x0 = np.array([0.985, 0.025, 0.30769, 0.27975, 0.23, 0.88]) # T, T1, T2, L, h4, W3
 # parameter bounds [min, max]
-bounds = np.array([0.2, 0.4], [0.02, 0.1], [0.02, 0.15], [13.0, 17.0], [1.0, 1.6], [0.1, 0.3]])
+# bounds = np.array([[0.2, 0.4], [0.02, 0.1], [0.02, 0.15], [13.0, 17.0], [1.0, 1.6], [0.1, 0.3]])
+bounds = np.array([[0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1]])
 
 # scipy.minimize
-# results = minimize(objective_function, x0, method='Nelder-Mead', options={'disp':True}, tol=1e-4, bounds=bounds)
+results = minimize(objective_function, x0, method='Nelder-Mead', options={'disp':True}, tol=1e-4, bounds=bounds)
 	
 # scipy.differential_evolution
-results = differential_evolution(objective_function, bounds)
+# results = differential_evolution(objective_function, bounds)
 		
 ## Save the optimized result to a pickle file
 with open('optimized_sav.pkl', 'wb') as fileObj:

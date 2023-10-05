@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-attempt = '2.2' # attempt number
+attempt = '2.3' # attempt number
 params = ["T", "T1", "T2", "L", "h4", "W3"]
 
 # read in data
@@ -122,7 +122,7 @@ for i in range(len(data[:, -1])):
     score = data[i, -1]
     if score < threshold:
         inputs = [x.round(3) for x in normalize(indata[i, :], bounds=var_bounds, inverse=True)] # converts from normalized to actual & rounds to 3 decimal places
-        best_inputs_norm.append([x.round(3) for x in indata[i, :]])
+        best_inputs_norm.append([x.round(4) for x in indata[i, :]])
         print(f'{inputs} => {score}')
 
 # plot best normalized input values vs parameter name
@@ -136,5 +136,5 @@ plt.xticks(x, params)
 #plt.show()
 plt.savefig(f'optimization/attempt_{attempt}/{attempt}_best_norm_inputs.png')
 
-# print(normalize(np.array([ 0.4,  0.04,   0.06,  14,  1.2, 0.2 ]), bounds=var_bounds, inverse=False))
+# print(list(normalize(np.array([0.397, 0.022, 0.06, 14.119, 1.138, 0.276]), bounds=var_bounds, inverse=False)))
 # print(normalize(np.array([1.0, 0.25, 0.308, 0.25, 0.333, 0.5]), bounds=var_bounds, inverse=True))
