@@ -65,13 +65,13 @@ def normalize(x, bounds, inverse=False):
 # OPTIMIZATION FUNCTIONS
 #----------------------------------------------------------
 
-# T, T1, T2, L, h4, W3
-var_bounds = np.array([[0.2, 0.02, 0.02, 13.0, 1.0, 0.1], [0.4, 0.1, 0.15, 17.0, 1.6, 0.3]])
+# T, T2, L, h4, W3
+var_bounds = np.array([[0.2, 0.02, 13.0, 1.0, 0.1], [0.5, 0.15, 17.0, 1.6, 0.3]])
 
 # Save var_bounds to metadata
 with open('all_metadata.txt', 'w') as fileObj:
 	fileObj.write('var_bounds\n')
-	fileObj.write('T,T1,T2,L,h4,W3\n')
+	fileObj.write('T,T2,L,h4,W3\n')
 	fileObj.write(','.join([str(v) for v in var_bounds[0]]) + '\n')
 	fileObj.write(','.join([str(v) for v in var_bounds[1]]) + '\n')
 	
@@ -174,10 +174,10 @@ with open('all_run_data.txt', 'w') as fileObj:
 #----------------------------------------------------------
 
 # initial guess
-x0 = np.array([0.985, 0.025, 0.30769, 0.27975, 0.23, 0.88]) # T, T1, T2, L, h4, W3
+x0 = np.array([0.743, 0.21538, 0.315, 0.24333, 0.86]) # T, T2, L, h4, W3
 # parameter bounds [min, max]
 # bounds = np.array([[0.2, 0.4], [0.02, 0.1], [0.02, 0.15], [13.0, 17.0], [1.0, 1.6], [0.1, 0.3]])
-bounds = np.array([[0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1]])
+bounds = [(0, 1), (0, 1), (0, 1), (0, 1), (0, 1)]
 
 # scipy.minimize
 results = minimize(objective_function, x0, method='Nelder-Mead', options={'disp':True}, tol=1e-4, bounds=bounds)

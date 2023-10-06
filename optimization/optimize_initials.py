@@ -66,12 +66,12 @@ def normalize(x, bounds, inverse=False):
 #----------------------------------------------------------
 
 # T, T1, T2, L, h4, W3
-var_bounds = np.array([[0.2, 0.02, 0.02, 13.0, 1.0, 0.1], [0.4, 0.1, 0.15, 17.0, 1.6, 0.3]])
+var_bounds = np.array([[0.2, 0.02, 13.0, 1.0, 0.1], [0.5, 0.15, 17.0, 1.6, 0.3]])
 
 # Save var_bounds to metadata
 with open('all_metadata.txt', 'w') as fileObj:
 	fileObj.write('var_bounds\n')
-	fileObj.write('T,T1,T2,L,h4,W3\n')
+	fileObj.write('T,T2,L,h4,W3\n')
 	fileObj.write(','.join([str(v) for v in var_bounds[0]]) + '\n')
 	fileObj.write(','.join([str(v) for v in var_bounds[1]]) + '\n')
 	
@@ -181,11 +181,11 @@ import itertools
 # input_values = list(itertools.product([0, 0.5, 1], repeat=6))
 
 # Using results from full factorial to explore specific subsets of parameters
-input_values = []
-for L in np.linspace(0,1,6):
-	for h4 in np.linspace(0,1,6):
-		for W3 in np.linspace(0,1,6):
-			input_values.append([1, 0, 0, round(L, 1), round(h4, 1), round(W3, 1)])
+# input_values = []
+# for L in np.linspace(0,1,6):
+	# for h4 in np.linspace(0,1,6):
+		# for W3 in np.linspace(0,1,6):
+			# input_values.append([1, 0, 0, round(L, 1), round(h4, 1), round(W3, 1)])
 
 # Normalize each parameter by dividing by the maximum value
 for values in input_values:

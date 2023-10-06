@@ -1,0 +1,9 @@
+var_bounds
+T,T2,L,h4,W3
+0.2,0.02,13.0,1.0,0.1
+0.5,0.15,17.0,1.6,0.3
+
+fork_script
+VERSION, Yield_Stress_Pa, Safety_Factor, Stress_Threshold_Pa, Load1_N, Load2_N 
+2.0, 60000000.0, 1.10, 54545454.545, 15.0, 5.0 
+

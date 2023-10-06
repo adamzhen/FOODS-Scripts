@@ -88,7 +88,7 @@ failure = False # represents if model has reach yield stress for either load 1 o
 
 F1 = 15.0 # Newtons
 F2 = 5.0 # Newtons
-paramNames = ['T', 'T1', 'T2', 'L', 'h4', 'W3']
+paramNames = ['T', 'T2', 'L', 'h4', 'W3']
 
 # Open data file and write column headings
 DataFile = open('PostData.txt','w')
@@ -113,7 +113,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 		print varValues
 		
 		# Top View
-		L = varValues[3] # TOTAL LENGTH (cm)
+		L = varValues[2] # TOTAL LENGTH (cm)
 		L1 = 0.404 * L
 		L11 = 0.2 * L #Length from root to point
 		L2 = 0.78 * (L1-L11)
@@ -127,7 +127,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 		Wt1 = 0.208 * W12 # 2 outer tines
 		Wt2 = 0.177 * W12 # 2 inner tines
 		Ws = (W12 - 2*Wt1 - 2*Wt2) / 3 # 3 slots
-		W3 = varValues[5] * W
+		W3 = varValues[4] * W
 		W4 = 0.48 * W
 		W21 = 0.94 * (W-W3) + W3
 		l21 = 0.85 * L2
@@ -141,10 +141,10 @@ for loadn in range(1, 3): # Loads 1 and 2
 		# Side View 
 
 		T = varValues[0] # MAXIMUM THICKNESS (cm)
-		T1 = varValues[1]
+		T1 = 0.022 # Optimal value obtained from optimizations
 
 		l4 = L2
-		h4 = varValues[4] # heights expressed in terms of h4, since it's the max height
+		h4 = varValues[3] # heights expressed in terms of h4, since it's the max height
 		h7 = 0.241 * h4 # height of tine tip from plane
 		l1 = 0.27 * l4
 		h1 = 0.1 * h4
@@ -159,7 +159,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 
 		# Bottom View
 
-		T2 = varValues[2]
+		T2 = varValues[1]
 		T3 = T2
 
 		# X Support
@@ -947,7 +947,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 		#####################################
 		print 'Creating/Running Job'
 
-		ModelName = 'Model-%s' % (modelNum)
+		#ModelName = 'Model-%s' % (modelNum)
 
 		mdb.Job(name=ModelName, model=ModelName, description='', 
 				type=ANALYSIS, atTime=None, waitMinutes=0, waitHours=0, queue=None, 
