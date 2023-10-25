@@ -79,9 +79,15 @@ session.journalOptions.setValues(replayGeometry=COORDINATE,recoverGeometry=COORD
 ### Scripting the entire model allows its entire
 ### contents to be packaged into this single file.
 
+#########################################
+##### CHANGE SCRIPT PARAMETERS HERE #####
+#########################################
+
 VERSION = 2.0
 RUNJOB = True
 cutTips = True
+generateXSupport = False
+dispNodes = False # nodes for querying displacement (also change in Post_P_Script)
 modelNum = 1
 #loadn = 1
 failure = False # represents if model has reach yield stress for either load 1 or 2
@@ -89,6 +95,9 @@ failure = False # represents if model has reach yield stress for either load 1 o
 F1 = 15.0 # Newtons
 F2 = 5.0 # Newtons
 paramNames = ['T', 'T2', 'L', 'h4', 'W3']
+
+#########################################
+#########################################
 
 # Open data file and write column headings
 DataFile = open('PostData.txt','w')
@@ -591,12 +600,36 @@ for loadn in range(1, 3): # Loads 1 and 2
 		p.Mirror(mirrorPlane=f.findAt(coordinates=(0.0, L3/2, T1/4.0)), keepOriginal=ON)
 
 		# Fork-cm
-		a = mdb.models[ModelName].rootAssembly
-		a.translate(instanceList=('X-Support-1', ), vector=(0.0, 0.0, T1))
-		a = mdb.models[ModelName].rootAssembly
-		a.InstanceFromBooleanMerge(name='Fork-cm', instances=(
-			a.instances['X-Support-1'], a.instances['Fork-1-1'], ), 
-			keepIntersections=ON, originalInstances=DELETE, domain=GEOMETRY)
+		if generateXSupport:
+			a = mdb.models[ModelName].rootAssembly
+			a.translate(instanceList=('X-Support-1', ), vector=(0.0, 0.0, T1))
+			a = mdb.models[ModelName].rootAssembly
+			a.InstanceFromBooleanMerge(name='Fork-cm', instances=(
+				a.instances['X-Support-1'], a.instances['Fork-1-1'], ), 
+				keepIntersections=ON, originalInstances=DELETE, domain=GEOMETRY)
+		else:
+			a = mdb.models[ModelName].rootAssembly
+			del a.features['X-Support-1']
+			del a.features['Fork-1-1']
+			p = mdb.models[ModelName].Part(name='Fork-cm', 
+				objectToCopy=mdb.models[ModelName].parts['Fork-1'])
+
+
+		# Fork-cm-SA
+		if generateXSupport:
+			a = mdb.models[ModelName].rootAssembly
+			p = mdb.models[ModelName].parts['X-Support']
+			a.Instance(name='X-Support-1', part=p, dependent=ON)
+			a.translate(instanceList=('X-Support-1', ), vector=(0.0, 0.0, T1))
+			a = mdb.models[ModelName].rootAssembly
+			a.InstanceFromBooleanMerge(name='Fork-cm-SA', instances=(
+				a.instances['X-Support-1'], a.instances['Fork-cm-1'], ), 
+				originalInstances=DELETE, domain=GEOMETRY)
+			del a.features['Fork-cm-SA-1'] # Deleting Fork-cm-SA from assembly
+		else:
+			p = mdb.models[ModelName].Part(name='Fork-cm-SA', 
+				objectToCopy=mdb.models[ModelName].parts['Fork-cm'])
+
 
 		# Fork-m
 		p1 = mdb.models[ModelName].parts['Fork-cm']
@@ -604,16 +637,6 @@ for loadn in range(1, 3): # Loads 1 and 2
 			objectToCopy=mdb.models[ModelName].parts['Fork-cm'], 
 			compressFeatureList=ON, scale=0.01)
 		
-		# Fork-cm-SA
-		a = mdb.models[ModelName].rootAssembly
-		p = mdb.models[ModelName].parts['X-Support']
-		a.Instance(name='X-Support-1', part=p, dependent=ON)
-		a.translate(instanceList=('X-Support-1', ), vector=(0.0, 0.0, T1))
-		a = mdb.models[ModelName].rootAssembly
-		a.InstanceFromBooleanMerge(name='Fork-cm-SA', instances=(
-			a.instances['X-Support-1'], a.instances['Fork-cm-1'], ), 
-			originalInstances=DELETE, domain=GEOMETRY)
-
 		# Partitioning
 		p = mdb.models[ModelName].parts['Fork-m']
 		c = p.cells
@@ -673,7 +696,6 @@ for loadn in range(1, 3): # Loads 1 and 2
 		print 'Placing Parts in Space'
 		a = mdb.models[ModelName].rootAssembly
 		session.viewports['Viewport: 1'].setValues(displayedObject=a)
-		del a.features['Fork-cm-SA-1'] # Deleting Fork-cm-SA from assembly
 		a1 = mdb.models[ModelName].rootAssembly
 		p = mdb.models[ModelName].parts['Fork-m']
 		a1.Instance(name='Fork-m-1', part=p, dependent=ON) # Adding Fork-m to assembly
@@ -769,38 +791,39 @@ for loadn in range(1, 3): # Loads 1 and 2
 			#Define Sets
 			print 'Defining Sets'
 			
-			# Create reference points
-			a = mdb.models[ModelName].rootAssembly
-			v1 = a.instances['Fork-m-1'].vertices
-			a.ReferencePoint(point=v1.findAt(coordinates=((Ws+Wt2-T3)/2/100, (L3+L2)/100, (h4+T)/100)))
-			a = mdb.models[ModelName].rootAssembly
-			v1 = a.instances['Fork-m-1'].vertices
-			a.ReferencePoint(point=v1.findAt(coordinates=(0.0, 0.0, 0.0)))
-			a = mdb.models[ModelName].rootAssembly
-			
-			# Create coupling constraints
-			a = mdb.models[ModelName].rootAssembly
-			r1 = a.referencePoints
-			refPoints1=(r1[44], )
-			region1=a.Set(referencePoints=refPoints1, name='m_Set-5')
-			a = mdb.models[ModelName].rootAssembly
-			v1 = a.instances['Fork-m-1'].vertices
-			verts1 = v1.findAt((((Ws+Wt2-T3)/2/100, (L3+L2)/100, (h4+T)/100), ))
-			region2=a.Set(vertices=verts1, name='s_Set-5')
-			mdb.models[ModelName].Coupling(name='Constraint-1-1', controlPoint=region1, 
-				surface=region2, influenceRadius=WHOLE_SURFACE, couplingType=KINEMATIC, 
-				localCsys=None, u1=ON, u2=ON, u3=ON, ur1=ON, ur2=ON, ur3=ON)
-			a = mdb.models[ModelName].rootAssembly
-			r1 = a.referencePoints
-			refPoints1=(r1[45], )
-			region1=a.Set(referencePoints=refPoints1, name='m_Set-6')
-			a = mdb.models[ModelName].rootAssembly
-			v1 = a.instances['Fork-m-1'].vertices
-			verts1 = v1.findAt(((0.0, 0.0, 0.0), ))
-			region2=a.Set(vertices=verts1, name='s_Set-6')
-			mdb.models[ModelName].Coupling(name='Constraint-1-2', controlPoint=region1, 
-				surface=region2, influenceRadius=WHOLE_SURFACE, couplingType=KINEMATIC, 
-				localCsys=None, u1=ON, u2=ON, u3=ON, ur1=ON, ur2=ON, ur3=ON)
+			if dispNodes:
+				# Create reference points
+				a = mdb.models[ModelName].rootAssembly
+				v1 = a.instances['Fork-m-1'].vertices
+				a.ReferencePoint(point=v1.findAt(coordinates=((Ws+Wt2-T3)/2/100, (L3+L2)/100, (h4+T)/100)))
+				a = mdb.models[ModelName].rootAssembly
+				v1 = a.instances['Fork-m-1'].vertices
+				a.ReferencePoint(point=v1.findAt(coordinates=(0.0, 0.0, 0.0)))
+				a = mdb.models[ModelName].rootAssembly
+				
+				# Create coupling constraints
+				a = mdb.models[ModelName].rootAssembly
+				r1 = a.referencePoints
+				refPoints1=(r1[44], )
+				region1=a.Set(referencePoints=refPoints1, name='m_Set-5')
+				a = mdb.models[ModelName].rootAssembly
+				v1 = a.instances['Fork-m-1'].vertices
+				verts1 = v1.findAt((((Ws+Wt2-T3)/2/100, (L3+L2)/100, (h4+T)/100), ))
+				region2=a.Set(vertices=verts1, name='s_Set-5')
+				mdb.models[ModelName].Coupling(name='Constraint-1-1', controlPoint=region1, 
+					surface=region2, influenceRadius=WHOLE_SURFACE, couplingType=KINEMATIC, 
+					localCsys=None, u1=ON, u2=ON, u3=ON, ur1=ON, ur2=ON, ur3=ON)
+				a = mdb.models[ModelName].rootAssembly
+				r1 = a.referencePoints
+				refPoints1=(r1[45], )
+				region1=a.Set(referencePoints=refPoints1, name='m_Set-6')
+				a = mdb.models[ModelName].rootAssembly
+				v1 = a.instances['Fork-m-1'].vertices
+				verts1 = v1.findAt(((0.0, 0.0, 0.0), ))
+				region2=a.Set(vertices=verts1, name='s_Set-6')
+				mdb.models[ModelName].Coupling(name='Constraint-1-2', controlPoint=region1, 
+					surface=region2, influenceRadius=WHOLE_SURFACE, couplingType=KINEMATIC, 
+					localCsys=None, u1=ON, u2=ON, u3=ON, ur1=ON, ur2=ON, ur3=ON)
 				
 		if loadn==2:
 			#Define Steps
@@ -853,42 +876,44 @@ for loadn in range(1, 3): # Loads 1 and 2
 			#Define Sets
 			print 'Defining Sets'
 			
-			flattip1 = Wtip - (2*fr1 - fr1/L11 * 2*((W1/2-Wtip) - (1.5*Ws+Wt2))) # width of flat part of outer tip in cm
-			flattip2 = Wtip - (2*fr1 - fr1/L11 * (Wt2-Wtip)) # width of flat part of inner tip in cm
-			# Create reference points
-			a = mdb.models[ModelName].rootAssembly
-			e1 = a.instances['Fork-m-1'].edges
-			a.ReferencePoint(point=a.instances['Fork-m-1'].InterestingPoint(edge=e1.findAt(
-				coordinates=((Ws+Wt2-flattip2)/2/100, L/100, (h7)/100)), rule=MIDDLE))
-			a = mdb.models[ModelName].rootAssembly
-			e1 = a.instances['Fork-m-1'].edges
-			a.ReferencePoint(point=a.instances['Fork-m-1'].InterestingPoint(edge=e1.findAt(
-				coordinates=((W1-Wtip-flattip1)/2/100, L/100, (h7)/100)), rule=MIDDLE))
-			a = mdb.models[ModelName].rootAssembly
-			
-			# Create tie constraints
-			a = mdb.models[ModelName].rootAssembly
-			v1 = a.instances['Fork-m-1'].vertices
-			verts1 = v1.findAt((((Ws+Wt2-flattip2)/2/100, L/100, (h7)/100), ))
-			region1=a.Set(vertices=verts1, name='m_Set-Node-1')
-			a = mdb.models[ModelName].rootAssembly
-			r1 = a.referencePoints
-			refPoints1=(r1[39], )
-			region2=a.Set(referencePoints=refPoints1, name='s_Set-Node-1')
-			mdb.models[ModelName].Tie(name='Tie-2-1', master=region1, slave=region2, 
-				positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
+			if dispNodes:
+				flattip1 = Wtip - (2*fr1 - fr1/L11 * 2*((W1/2-Wtip) - (1.5*Ws+Wt2))) # width of flat part of outer tip in cm
+				flattip2 = Wtip - (2*fr1 - fr1/L11 * (Wt2-Wtip)) # width of flat part of inner tip in cm
 				
-			a = mdb.models[ModelName].rootAssembly
-			v1 = a.instances['Fork-m-1'].vertices
-			verts1 = v1.findAt((((W1-Wtip-flattip1)/2/100, L/100, (h7)/100), ))
-			region1=a.Set(vertices=verts1, name='m_Set-Node-2')
-			a = mdb.models[ModelName].rootAssembly
-			r1 = a.referencePoints
-			refPoints1=(r1[40], )
-			region2=a.Set(referencePoints=refPoints1, name='s_Set-Node-2')
-			mdb.models[ModelName].Tie(name='Tie-2-2', master=region1, slave=region2, 
-				positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
-			
+				# Create reference points
+				a = mdb.models[ModelName].rootAssembly
+				e1 = a.instances['Fork-m-1'].edges
+				a.ReferencePoint(point=a.instances['Fork-m-1'].InterestingPoint(edge=e1.findAt(
+					coordinates=((Ws+Wt2-flattip2)/2/100, L/100, (h7)/100)), rule=MIDDLE))
+				a = mdb.models[ModelName].rootAssembly
+				e1 = a.instances['Fork-m-1'].edges
+				a.ReferencePoint(point=a.instances['Fork-m-1'].InterestingPoint(edge=e1.findAt(
+					coordinates=((W1-Wtip-flattip1)/2/100, L/100, (h7)/100)), rule=MIDDLE))
+				a = mdb.models[ModelName].rootAssembly
+				
+				# Create tie constraints
+				a = mdb.models[ModelName].rootAssembly
+				v1 = a.instances['Fork-m-1'].vertices
+				verts1 = v1.findAt((((Ws+Wt2-flattip2)/2/100, L/100, (h7)/100), ))
+				region1=a.Set(vertices=verts1, name='m_Set-Node-1')
+				a = mdb.models[ModelName].rootAssembly
+				r1 = a.referencePoints
+				refPoints1=(r1[39], )
+				region2=a.Set(referencePoints=refPoints1, name='s_Set-Node-1')
+				mdb.models[ModelName].Tie(name='Tie-2-1', master=region1, slave=region2, 
+					positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
+					
+				a = mdb.models[ModelName].rootAssembly
+				v1 = a.instances['Fork-m-1'].vertices
+				verts1 = v1.findAt((((W1-Wtip-flattip1)/2/100, L/100, (h7)/100), ))
+				region1=a.Set(vertices=verts1, name='m_Set-Node-2')
+				a = mdb.models[ModelName].rootAssembly
+				r1 = a.referencePoints
+				refPoints1=(r1[40], )
+				region2=a.Set(referencePoints=refPoints1, name='s_Set-Node-2')
+				mdb.models[ModelName].Tie(name='Tie-2-2', master=region1, slave=region2, 
+					positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
+				
 		#Mesh Parts
 		print 'Meshing the Baffle'
 		# set mesh controls
@@ -956,8 +981,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 				modelPrint=OFF, contactPrint=OFF, historyPrint=OFF, 
 				userSubroutine='', 
 				scratch='', multiprocessingMode=DEFAULT, numCpus=4, numDomains=4)
-		if RUNJOB:
-			job=mdb.jobs[ModelName]
+		job=mdb.jobs[ModelName]
 
 		# delete lock file, which for some reason tends to hang around, if it exists
 		if os.access('%s.lck'%ModelName,os.F_OK):
@@ -976,7 +1000,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 		##########################################
 		
 		print 'Pulling data from ODB'
-		results = getResults(ModelName, stepName, loadn)
+		results = getResults(ModelName, stepName, loadn, dispNodes)
 		S = results[0]
 		U = results[1]
 		E = results[2]

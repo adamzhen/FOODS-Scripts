@@ -8,7 +8,7 @@ import visualization
 from viewerModules import *
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def getResults(ModelName, stepName, loadn):
+def getResults(ModelName, stepName, loadn, dispNodes):
 
 	"""
 	This ODB reading script does the following:
@@ -23,28 +23,29 @@ def getResults(ModelName, stepName, loadn):
 	odb = visualization.openOdb(odbName)
 	lastFrame = odb.steps[stepName].frames[-1]
 	print 'odb open'
-
-
-	# Selecting the node(s) to be queried
-	if loadn==1:
-		NODE1 = odb.rootAssembly.nodeSets['ASSEMBLY_CONSTRAINT-%1.0f-1_REFERENCE_POINT' % (loadn)]
-		NODE2 = odb.rootAssembly.nodeSets['ASSEMBLY_CONSTRAINT-%1.0f-2_REFERENCE_POINT' % (loadn)]
-	elif loadn==2:
-		NODE1 = odb.rootAssembly.nodeSets['M_SET-NODE-1']
-		NODE2 = odb.rootAssembly.nodeSets['M_SET-NODE-2']
 	
 	# Retrieve Y-displacements at the splines/connectors
 	print 'Retrieving ALL final displacements at ALL points'
 	dispField = lastFrame.fieldOutputs['U']
-
-	print 'Retrieving ALL displacements at nodes'
-	dFieldNode1 = dispField.getSubset(region=NODE1)
-	dFieldNode2 = dispField.getSubset(region=NODE2)
 	
-	#print 'Retrieving only U2 at nodes'
-	#Note, U1=data[0], U2=data[1], U3=data[2]
-	dispNode1 = dFieldNode1.values[0].magnitude
-	dispNode2 = dFieldNode2.values[0].magnitude
+	dispNode1 = 0
+	dispNode2 = 0
+	if dispNodes:
+		# Selecting the node(s) to be queried
+		if loadn==1:
+			NODE1 = odb.rootAssembly.nodeSets['ASSEMBLY_CONSTRAINT-%1.0f-1_REFERENCE_POINT' % (loadn)]
+			NODE2 = odb.rootAssembly.nodeSets['ASSEMBLY_CONSTRAINT-%1.0f-2_REFERENCE_POINT' % (loadn)]
+		elif loadn==2:
+			NODE1 = odb.rootAssembly.nodeSets['M_SET-NODE-1']
+			NODE2 = odb.rootAssembly.nodeSets['M_SET-NODE-2']
+		
+		print 'Retrieving ALL displacements at nodes'
+		dFieldNode1 = dispField.getSubset(region=NODE1)
+		dFieldNode2 = dispField.getSubset(region=NODE2)
+	
+		#Note, U1=data[0], U2=data[1], U3=data[2]
+		dispNode1 = dFieldNode1.values[0].magnitude
+		dispNode2 = dFieldNode2.values[0].magnitude
 
 	
 	## The following is left for use in later probems/projects
@@ -93,7 +94,11 @@ def getResults(ModelName, stepName, loadn):
 			if (allFields.has_key(Stress)):
 				#print 'Scanning for max VM STRESS, max strain, max displacement, and displacement at 2 nodes'
 				isStressPresent = 1
-				stressSet = allFields[Stress]  
+				if loadn==1:
+					targetset = assembly.elementSets["WITHOUT-TIPS"]
+					stressSet = allFields[Stress].getSubset(region=targetset)
+				elif loadn==2:
+					stressSet = allFields[Stress]
 				misesValues = []
 				for stressValue in stressSet.values: 
 					# misesValues.append(stressValue.mises)
