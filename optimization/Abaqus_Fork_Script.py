@@ -85,11 +85,10 @@ session.journalOptions.setValues(replayGeometry=COORDINATE,recoverGeometry=COORD
 
 VERSION = 2.0
 RUNJOB = True
-cutTips = True
+cutTips = False
 generateXSupport = False
 dispNodes = False # nodes for querying displacement (also change in Post_P_Script)
 modelNum = 1
-#loadn = 1
 failure = False # represents if model has reach yield stress for either load 1 or 2
 
 F1 = 15.0 # Newtons
@@ -178,6 +177,8 @@ for loadn in range(1, 3): # Loads 1 and 2
 		Tx1 = T * 0.2
 		Tx2 = T * 0.4
 		rx = W3 * 0.2
+
+		# Holes
 
 		# Seed Size
 		seedSize = 0.001 # sqrt( (((W4-W3)/2)**2) + (L3**2) ) / seedScale / 100 # calculating seed size and converting from cm to m
@@ -721,18 +722,17 @@ for loadn in range(1, 3): # Loads 1 and 2
 			print 'Defining Loads'
 
 			# Load-1 (Vertical)
-			# F1 defined at start of program
+			# F1 defined at start of program			
 			a = mdb.models[ModelName].rootAssembly
 			s1 = a.instances['Fork-m-1'].faces
-			surfFace1 = s1.findAt((0, L3/2/100, 0))
-			#surfFace2 = s1.findAt((0.0, L3/100-seedBuffer/2, 0.0))
-			Asurf1 = surfFace1.getSize() # + surfFace2.getSize()
-			side1Faces1 = s1.findAt(((0, L3/2/100, 0), ))
+			surfFace1 = s1.findAt(((W3+W4)/4/100, L3/2/100, T/2/100))
+			surfFace2 = s1.findAt((-(W3+W4)/4/100, L3/2/100, T/2/100))
+			Asurf1 = surfFace1.getSize() + surfFace2.getSize()
+			side1Faces1 = s1.findAt((((W3+W4)/4/100, L3/2/100, T/2/100), ), ((-(W3+W4)/4/100, L3/2/100, T/2/100), ))
 			region = a.Surface(side1Faces=side1Faces1, name='Surf-1')
 			mdb.models[ModelName].SurfaceTraction(name=loadName, createStepName=stepName, 
 				region=region, magnitude=(F1 / Asurf1), directionVector=((0.0, 0.0, 0.0), (0.0, 
 				1.0, 0.0)), distributionType=UNIFORM, field='', localCsys=None)
-				
 			a.regenerate()
 			
 			#Define BCs
@@ -780,7 +780,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 			# BC-1-2
 			a = mdb.models[ModelName].rootAssembly
 			f1 = a.instances['Fork-m-1'].faces
-			faces1 = f1.findAt(((0, L3/2/100, 0), ), ((0, 0.0, (T1+(T-T1))/2/100), ))
+			faces1 = f1.findAt(((0, 0.0, (T1+(T-T1))/2/100), ))
 			region = a.Set(faces=faces1, name='Set-1-2')
 			mdb.models[ModelName].DisplacementBC(name='BC-1-2', createStepName=stepName, 
 				region=region, u1=0.0, u2=UNSET, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET, 
@@ -967,6 +967,13 @@ for loadn in range(1, 3): # Loads 1 and 2
 			p.generateMesh()
 			a.regenerate()
 
+		# Query Volume
+		a = mdb.models[ModelName].rootAssembly
+		prop = a.getMassProperties()
+		V = prop['volume']
+		V *= 10**6 # converting to cm^3
+		print(V)
+		
 		#####################################
 		### Creation/Execution of the Job ###
 		#####################################
@@ -1016,6 +1023,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 		prop = a.getMassProperties()
 		V = prop['volume']
 		V *= 10**6 # converting to cm^3
+		print(V)
 
 		# DataFile = open('PostData.txt','a')
 		# DataFile.write('%1.0f, %1.0f, ' % (modelNum, n)) 
