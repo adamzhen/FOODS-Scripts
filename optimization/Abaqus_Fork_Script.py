@@ -31,7 +31,7 @@ import connectorBehavior
 import displayGroupOdbToolset as dgo
 
 from math import atan, sin, cos, tan, sqrt
-from Post_P_Script import getResults
+from Post_P_Script import getResults, findEigenValue
 
 session.journalOptions.setValues(replayGeometry=COORDINATE,recoverGeometry=COORDINATE)
 
@@ -83,9 +83,9 @@ session.journalOptions.setValues(replayGeometry=COORDINATE,recoverGeometry=COORD
 ##### CHANGE SCRIPT PARAMETERS HERE #####
 #########################################
 
-VERSION = 2.0
+VERSION = 2.1
 RUNJOB = True
-cutTips = False
+cutTips = True
 generateXSupport = False
 dispNodes = False # nodes for querying displacement (also change in Post_P_Script)
 modelNum = 1
@@ -111,19 +111,19 @@ Mdb()
 
 score = 0 # initializes score of objective function
 
-for loadn in range(1, 3): # Loads 1 and 2
+for loadn in range(1, 4): # Loads 1, 2, and 3
 	with open('inputs.txt', 'r') as fileObj:
 		varValues = [float(v) for v in fileObj.read().split(',')]
 	#vars = [1, 0, 0, 0, 0, 0]
 	print("Model %1.0f, Load Case %1.0f" % (modelNum, loadn))
 
-	if modelNum <= 2: # CHANGE THIS TO RUN CERTAIN PARTS OF THE FULL FACTORIAL
+	if modelNum <= 3:
 		print varValues
 		
 		# Top View
 		L = varValues[2] # TOTAL LENGTH (cm)
 		L1 = 0.404 * L
-		L11 = 0.2 * L #Length from root to point
+		L11 = 0.2 * L #Length from root to poisnt
 		L2 = 0.78 * (L1-L11)
 		L12 = L1 - L11 - L2
 		L3 = L - L1
@@ -703,12 +703,17 @@ for loadn in range(1, 3): # Loads 1 and 2
 		
 		loadName = 'Load-%s' % (loadn)
 		stepName = 'Load-%s' % (loadn)
-		if loadn==1:
+		if loadn==1 or loadn==3:
 			#Define Steps
 			print 'Defining the Steps'
-			mdb.models[ModelName].StaticStep(name=stepName, previous='Initial', 
-				initialInc=0.1)
-			session.viewports['Viewport: 1'].assemblyDisplay.setValues(step=stepName)
+			if loadn==1:
+				mdb.models[ModelName].StaticStep(name=stepName, previous='Initial', 
+					initialInc=0.1)
+			if loadn==3:
+				stepName = 'Buckling'
+				mdb.models[ModelName].BuckleStep(name=stepName, previous='Initial', 
+					numEigen=5, eigensolver=LANCZOS, minEigen=None, blockSize=DEFAULT, 
+					maxBlocks=DEFAULT)
 			
 			# Create Sets
 			a = mdb.models[ModelName].rootAssembly
@@ -830,8 +835,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 			print 'Defining the Steps'
 			mdb.models[ModelName].StaticStep(name=stepName, previous='Initial', 
 				initialInc=0.1)
-			session.viewports['Viewport: 1'].assemblyDisplay.setValues(step=stepName)
-
+	
 			#Define Loads
 			print 'Defining Loads'
 
@@ -959,7 +963,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 		# mesh Fork-m
 		p = mdb.models[ModelName].parts['Fork-m']
 		p.generateMesh()
-		if loadn==1:
+		if loadn==1 or loadn==3:
 			# mesh Food-Surface
 			p = mdb.models[ModelName].parts['Food-Surface']
 			p.seedPart(size=1.0, deviationFactor=0.1, minSizeFactor=0.1)
@@ -978,8 +982,6 @@ for loadn in range(1, 3): # Loads 1 and 2
 		### Creation/Execution of the Job ###
 		#####################################
 		print 'Creating/Running Job'
-
-		#ModelName = 'Model-%s' % (modelNum)
 
 		mdb.Job(name=ModelName, model=ModelName, description='', 
 				type=ANALYSIS, atTime=None, waitMinutes=0, waitHours=0, queue=None, 
@@ -1007,12 +1009,15 @@ for loadn in range(1, 3): # Loads 1 and 2
 		##########################################
 		
 		print 'Pulling data from ODB'
-		results = getResults(ModelName, stepName, loadn, dispNodes)
-		S = results[0]
-		U = results[1]
-		E = results[2]
-		Un1 = results[3]
-		Un2 = results[4]
+		if loadn==3: 
+			eigenvalue = findEigenValue(ModelName, stepName)
+		else:
+			results = getResults(ModelName, stepName, loadn, dispNodes)
+			S = results[0]
+			U = results[1]
+			E = results[2]
+			Un1 = results[3]
+			Un2 = results[4]
 
 		# Query Surface Area
 		p = mdb.models[ModelName].parts['Fork-cm-SA']
@@ -1023,7 +1028,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 		prop = a.getMassProperties()
 		V = prop['volume']
 		V *= 10**6 # converting to cm^3
-		print(V)
+		print('Volume = %1.7f' % (V))
 
 		# DataFile = open('PostData.txt','a')
 		# DataFile.write('%1.0f, %1.0f, ' % (modelNum, n)) 
@@ -1036,7 +1041,7 @@ for loadn in range(1, 3): # Loads 1 and 2
 		yield_stress = 60e6 # 60 MPa, Source: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6926899/
 		safety_factor = 1.1
 		stress_threshold = yield_stress / safety_factor
-		success_ind = '' # represents if both loads get executed successfully
+		success_ind = '' # represents if all loads get executed successfully
 		if loadn == 1:
 			if S <= stress_threshold: # load 1 success
 				score = -SA/V # this is negative in order to maximize using scipy minimize
@@ -1051,11 +1056,21 @@ for loadn in range(1, 3): # Loads 1 and 2
 					score = 0
 				score += S / stress_threshold
 			with open('all_run_data.txt', 'a') as fileObj:
-				fileObj.write('%1.3f, %1.1f, %1.3f \n' % (SA/V, S/1000000, score)) 
+				fileObj.write('%1.3f, %1.1f, ' % (SA/V, S/1000000)) 
+		elif loadn == 3:
+			if eigenvalue < 1: # load 3 failure
+				if score < 0:
+					score = 0
+				score += eigenvalue
+			with open('all_run_data.txt', 'a') as fileObj:
+				fileObj.write('%1.3f, %1.3f, %1.3f \n' % (SA/V, eigenvalue, score)) 
 			success_ind += '\n1'
-				
+			
 		with open('all_outputs.txt', 'a') as fileObj:
-			fileObj.write('%d, %1.3f, %1.3f, %1.1f, %1.3f, %1.3f\n' % (loadn, score, SA/V, S/1000000, Un1*100, Un2*100)) 
+			if loadn==3:
+				fileObj.write('%d, %1.3f, %1.3f, %1.3f\n' % (loadn, score, SA/V, eigenvalue)) 
+			else:
+				fileObj.write('%d, %1.3f, %1.3f, %1.1f, %1.3f, %1.3f\n' % (loadn, score, SA/V, S/1000000, Un1*100, Un2*100)) 
 		
 	modelNum += 1
 
@@ -1065,7 +1080,8 @@ with open('outputs.txt', 'w') as fileObj:
 	fileObj.write(str(score) + success_ind)
 with open('fork_script_metadata.txt', 'w') as fileObj:
 	fileObj.write('\nfork_script\n')
-	fileObj.write('VERSION, Yield_Stress_Pa, Safety_Factor, Stress_Threshold_Pa, Load1_N, Load2_N \n')
-	fileObj.write('%1.1f, %1.1f, %1.2f, %1.3f, %1.1f, %1.1f \n\n' % (VERSION, yield_stress, safety_factor, stress_threshold, F1, F2)) 
-		
+	fileObj.write('VERSION, Yield_Stress_Pa, Safety_Factor, Stress_Threshold_Pa, Load1_N, Load2_N, BucklingLoad \n')
+	fileObj.write('%1.1f, %1.1f, %1.2f, %1.3f, %1.1f, %1.1f, %d \n\n' % (VERSION, yield_stress, safety_factor, stress_threshold, F1, F2, 3)) 
+	
 print 'DONE!!'
+print('SCORE = %1.3f' % (score)

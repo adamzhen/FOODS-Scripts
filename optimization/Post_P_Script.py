@@ -168,15 +168,15 @@ def createXYPlot(vpOrigin, vpName, plotName, data):
     return
 
 
-def findEigenValue(ModelName,StepName):
+def findEigenValue(ModelName,StepName): # returns 1st eigenvalue
     odbName = ModelName+'.odb'
     odb = visualization.openOdb(odbName)
 
-    lastFrameM = odb.steps[StepName].frames[-1]
-    print lastFrameM.description
+    firstFrameM = odb.steps[StepName].frames[1]
+    print firstFrameM.description
 ##The following string is from the description of the frame; contains the eigenvalue
-    descString=lastFrameM.description
-    print lastFrameM.mode
+    descString=firstFrameM.description
+    print firstFrameM.mode
 ##Now we split the string at the = sign
     pattern2 = re.compile('\s*=\s*')
     print pattern2.split(descString)
