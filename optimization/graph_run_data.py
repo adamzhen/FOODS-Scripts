@@ -45,6 +45,7 @@ with open(f'optimization/attempt_{attempt}/all_metadata.txt', 'r') as f:
     fork_script_metadata = dict(zip([x.strip() for x in metadata[fork_script_ind].split(',')], [float(x) for x in metadata[fork_script_ind+1].split(',')]))
     print(fork_script_metadata)
     nDATA = fork_script_metadata['nDATA']
+    VERSION = float(fork_script_metadata['VERSION'])
 print()
 
 params = params_str.split(',')
@@ -70,16 +71,23 @@ indata = data[:, 0:len(params)]
 ################
 
 # plot normalized inputs
+
+# Set your specific colors for each parameter
+colors = ['#1f77b4', 'green', 'red', 'purple', 'brown']
+
+# Plot normalized inputs
+fig, ax = plt.subplots()
 x = np.arange(1, len(indata)+1, 1)
-plt.plot(x, indata, label=params)
-plt.xlabel('Run No.')
-plt.ylabel('Normalized Inputs')
-plt.title(f'Normalized Inputs vs Run No. (Attempt {attempt})')
-plt.legend(loc='lower right')
-plt.ylim(0, 1)
-#plt.show()
+for i in range(len(params)):
+    ax.plot(x, indata[:, i], label=params[i], color=colors[i])
+ax.set_xlabel('Run No.')
+ax.set_ylabel('Normalized Inputs')
+ax.set_title(f'Normalized Inputs (Attempt {attempt})')
+ax.set_ylim(0, 1)
+ax.legend()
 plt.savefig(f'optimization/attempt_{attempt}/{attempt}_normalized_inputs.png')
 plt.close()
+
 
 # plot score in scatter plot
 yvar = "Score"
@@ -115,15 +123,16 @@ plt.savefig(f'optimization/attempt_{attempt}/{attempt}_{yvar.lower()}.png')
 plt.close()
 
 # plot buckling in scatter plot
-yvar = "Buckling"
-x = np.arange(1, len(data)+1, 1)
-plt.scatter(x, data[:, 10], s=5)
-plt.xlabel('Run No.')
-plt.ylabel(f'{yvar}')
-plt.title(f'{yvar} vs Run No. (Attempt {attempt})')
-#plt.show()
-plt.savefig(f'optimization/attempt_{attempt}/{attempt}_{yvar.lower()}.png')
-plt.close()
+if VERSION >= 3.0:
+    yvar = "Buckling"
+    x = np.arange(1, len(data)+1, 1)
+    plt.scatter(x, data[:, 10], s=5)
+    plt.xlabel('Run No.')
+    plt.ylabel(f'{yvar}')
+    plt.title(f'{yvar} vs Run No. (Attempt {attempt})')
+    #plt.show()
+    plt.savefig(f'optimization/attempt_{attempt}/{attempt}_{yvar.lower()}.png')
+    plt.close()
 
 ##### FIND BEST SCORES #####
 
@@ -172,23 +181,21 @@ plt.close()
 # Convert to actual inputs
 # print(normalize(np.array([1.0, 0.25, 0.308, 0.25, 0.333, 0.5]), bounds=var_bounds, inverse=True))
 
-# plot normalized inputs on bar graph with a bar extending from the lower bound to the best value, and one extending from the best to the upper bound (superimposed on each other). Please label the bounds and the best inputs with the actual values. Remember tat best_norm_inputs only has normalized inputs, they need to be converted to actual inputs
-plt.figure(figsize=(10, 5))
+# plot normalized inputs on bar graph with a bar extending from the lower bound to the best value, and one extending from the best to the upper bound (superimposed on each other). Use subplots
+fig, ax = plt.subplots()
 x = np.arange(1, len(params)+1, 1)
-BEST_INPUT_NORM = data[best_score_ind, :len(params)]
-BEST_INPUT = normalize(BEST_INPUT_NORM, bounds=var_bounds, inverse=True)
-lower_bounds = var_bounds[0]
-upper_bounds = var_bounds[1]
-width = 0.3
-plt.bar(x, lower_bounds, width, label='Lower Bounds', color='r')
-plt.bar(x, upper_bounds, width, label='Upper Bounds', color='b')
-plt.bar(x, BEST_INPUT_NORM, width, label='Best Inputs', color='g')
-plt.xlabel('Parameter')
-plt.ylabel('Actual Input')
-plt.title(f'Actual Inputs with Bounds and Best Inputs (Attempt {attempt})')
-plt.xticks(x, params)
-plt.legend(loc='upper right')
-plt.show()
+best_inputs_norm = indata[best_score_ind, :]
+width = 0.35
+ax.bar(x+width/2, 1, width, color='gray', label='')
+ax.bar(x+width/2, best_inputs_norm, width, color='g', label='')
+ax.set_xlabel('Parameter')
+ax.set_ylabel('Normalized Inputs')
+ax.set_title(f'Best Inputs (Attempt {attempt})')
+ax.set_xticks(x + width / 2)
+ax.set_xticklabels(params)
+ax.legend()
+plt.savefig(f'optimization/attempt_{attempt}/{attempt}_best_inputs_plot.png')
+plt.close()
 
 
 

@@ -83,7 +83,7 @@ session.journalOptions.setValues(replayGeometry=COORDINATE,recoverGeometry=COORD
 ##### CHANGE SCRIPT PARAMETERS HERE #####
 #########################################
 
-VERSION = 2.1
+VERSION = 3.1
 RUNJOB = True
 cutTips = True
 generateXSupport = False
@@ -136,7 +136,7 @@ for loadn in range(1, 4): # Loads 1, 2, and 3
 		Wt2 = 0.177 * W12 # 2 inner tines
 		Ws = (W12 - 2*Wt1 - 2*Wt2) / 3 # 3 slots
 		W3 = varValues[4] * W
-		W4 = 0.48 * W
+		W4 = 1.7 * W3 # 0.48 * W
 		W21 = 0.94 * (W-W3) + W3
 		l21 = 0.85 * L2
 		W22 = 0.56 * (W-W3) + W3
@@ -990,7 +990,7 @@ for loadn in range(1, 4): # Loads 1, 2, and 3
 				modelPrint=OFF, contactPrint=OFF, historyPrint=OFF, 
 				userSubroutine='', 
 				scratch='', multiprocessingMode=DEFAULT, numCpus=4, numDomains=4)
-		job=mdb.jobs[ModelName]
+		#job=mdb.jobs[ModelName]
 
 		# delete lock file, which for some reason tends to hang around, if it exists
 		if os.access('%s.lck'%ModelName,os.F_OK):
@@ -1022,6 +1022,7 @@ for loadn in range(1, 4): # Loads 1, 2, and 3
 		# Query Surface Area
 		p = mdb.models[ModelName].parts['Fork-cm-SA']
 		SA = p.getArea(p.faces)
+		print('Surface Area = %1.7f' % (SA))
 		
 		# Query Volume
 		a = mdb.models[ModelName].rootAssembly
@@ -1084,4 +1085,4 @@ with open('fork_script_metadata.txt', 'w') as fileObj:
 	fileObj.write('%1.1f, %1.1f, %1.2f, %1.3f, %1.1f, %1.1f, %d \n\n' % (VERSION, yield_stress, safety_factor, stress_threshold, F1, F2, 3)) 
 	
 print 'DONE!!'
-print('SCORE = %1.3f' % (score)
+print('SCORE = %1.3f' % (score))
